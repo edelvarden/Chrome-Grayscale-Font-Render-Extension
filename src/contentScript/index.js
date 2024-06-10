@@ -5,17 +5,7 @@
 - https://developer.mozilla.org/en-US/docs/Web/API/Document/createDocumentFragment
 - https://react.dev/learn
 */
-import {
-  CONFIG,
-  LOCAL_CONFIG,
-  cleanupStyles,
-  init,
-  invokeObserver,
-  invokeReplacer,
-  preview,
-  simpleErrorHandler,
-  tl,
-} from '../utils/fn.js'
+import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fn.js'
 
 invokeObserver()
 
@@ -23,25 +13,8 @@ window.addEventListener('DOMContentLoaded', () => {
   invokeReplacer()
 })
 
+preview()
 // ----------------------------------------------------------------
-
-LOCAL_CONFIG?.get({ off: !1 }, function (c) {
-  simpleErrorHandler(tl('error_settings_load')) ||
-    c.off ||
-    CONFIG?.get(
-      {
-        'font-default': '',
-        'font-mono': '',
-      },
-      function (settings) {
-        if (simpleErrorHandler(tl('error_settings_load'))) {
-          return
-        }
-
-        init(settings)
-      },
-    )
-})
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
