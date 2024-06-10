@@ -221,11 +221,15 @@ const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
   }
 
   const rootCssVariables = []
+  // const sansFallbackString = "sans-serif";
+  // const monospaceFallbackString = "monospace";
+  // const emojiFallbackString = "'Apple Color Emoji', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'";
   if (isSansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)};`)
   if (isMonospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)};`)
   cssRules.push(`
     :root {
-      ${rootCssVariables.join('\n')}
+      ${rootCssVariables.join('')}
+      font-synthesis: weight;
     }
   `)
 
@@ -259,13 +263,17 @@ const getFontFamily = (element) => getComputedStyle(element).fontFamily
 
 const replaceFont = (element) => {
   const fontFamily = getFontFamily(element)
-  if (!fontFamily) return
+  if (!fontFamily) return false
 
+  if (/monospace/.test(fontFamily)) {
+    element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
+    return true
+  }
   if (/sans-serif|serif/.test(fontFamily)) {
     element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
-  } else if (/monospace/.test(fontFamily)) {
-    element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
+    return true
   }
+  return false
 }
 
 const replaceFonts = (elements) => elements.forEach(replaceFont)
