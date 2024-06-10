@@ -23,10 +23,10 @@
   "font_default__description": {
     "message": "serif, sans-serif"
   },
-  "font_fixed": {
+  "font_mono": {
     "message": "Code"
   },
-  "font_fixed__description": {
+  "font_mono__description": {
     "message": "monospace"
   },
   "settings_title_fonts": {

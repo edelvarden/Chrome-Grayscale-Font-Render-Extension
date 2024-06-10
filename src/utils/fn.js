@@ -25,7 +25,8 @@ export const tl = (message, args = []) => chrome.i18n.getMessage(message, args)
  *
  * @returns {boolean} True if an error has occurred, false otherwise.
  */
-const isErrorOccurred = () => chrome.runtime.lastError && console.log("ERROR: " + chrome.runtime.lastError.message)
+const isErrorOccurred = () =>
+  chrome.runtime.lastError && console.log('ERROR: ' + chrome.runtime.lastError.message)
 
 export const simpleErrorHandler = (message) => isErrorOccurred() && alert(message)
 
@@ -70,7 +71,7 @@ export const $$$ = (tag, attributes = {}, customAttributes = {}, css = {}) => {
  * @returns {string} The normalized font name.
  */
 const fixName = (a) => {
-  a = a.replace(/['"]/g, "")
+  a = a.replace(/['"]/g, '')
   return /^(?:serif|sans-serif|cursive|fantasy|monospace)$/.test(a) ? a : `"${a}"`
 }
 
@@ -82,12 +83,12 @@ const fixName = (a) => {
  */
 const minifyCssString = (cssString) =>
   cssString
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/\s+/g, " ")
-    .replace(/\s*(:|;|\{|\})\s*/g, "$1")
-    .replace(/, /g, ",")
-    .replace(/ \( /g, "(")
-    .replace(/ \) /g, ")")
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*(:|;|\{|\})\s*/g, '$1')
+    .replace(/, /g, ',')
+    .replace(/ \( /g, '(')
+    .replace(/ \) /g, ')')
     .trim()
 
 /**
@@ -97,10 +98,14 @@ const minifyCssString = (cssString) =>
  * @returns {string} A random hash code of the given length.
  */
 const generateHash = (length) => {
-  if (!Number.isInteger(length) || length <= 0) throw new Error("Invalid length for hash generation:", length)
+  if (!Number.isInteger(length) || length <= 0)
+    throw new Error('Invalid length for hash generation:', length)
 
-  const randomSymbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  return Array.from({ length }, () => randomSymbols[Math.floor(Math.random() * randomSymbols.length)]).join("")
+  const randomSymbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  return Array.from(
+    { length },
+    () => randomSymbols[Math.floor(Math.random() * randomSymbols.length)],
+  ).join('')
 }
 
 const addHashSuffix = (prefix) => `${prefix}__${generateHash(6)}`
@@ -129,24 +134,24 @@ export const STYLE_TAG2_ID = addHashSuffix('style2')
  */
 const EXCLUDED_TAGS = [
   // Iconic font selectors
-  "i",
-  "mat-icon",
-  "gf-load-icon-font",
+  'i',
+  'mat-icon',
+  'gf-load-icon-font',
 
   // Monospace
-  "pre", // (optional) can be not monospaced
-  "textarea", // (optional) can be not monospaced
+  'pre', // (optional) can be not monospaced
+  'textarea', // (optional) can be not monospaced
 
   // Additional exclusion (for observer scanning)
-  "span",
-  "div",
-  "button",
-  "li",
-  "a",
+  'span',
+  'div',
+  'button',
+  'li',
+  'a',
 ]
 
 export const init = (settings) => {
-  const { "font-default": sansFont, "font-fixed": monospaceFont } = settings
+  const { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
   const isSansFont = sansFont && sansFont.length > 0
   const isMonospaceFont = monospaceFont && monospaceFont.length > 0
 
@@ -158,38 +163,38 @@ export const init = (settings) => {
   const cssRules = getCssRules(isSansFont, isMonospaceFont, sansFont, monospaceFont)
   const classContent = getClassContent(isSansFont, isMonospaceFont)
 
-  createStyleTag(STYLE_TAG1_ID, cssRules.join(""), "before")
-  createStyleTag(STYLE_TAG2_ID, classContent, "after")
+  createStyleTag(STYLE_TAG1_ID, cssRules.join(''), 'before')
+  createStyleTag(STYLE_TAG2_ID, classContent, 'after')
 
   if (isSansFont) {
-    document.documentElement.style.setProperty("font-family", `var(--${SANS_CLASS})`, "important")
-    document.body.style.setProperty("font-family", `var(--${SANS_CLASS})`, "important")
+    document.documentElement.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
+    document.body.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
   } else {
-    document.documentElement.style.removeProperty("font-family")
-    document.body.style.removeProperty("font-family")
+    document.documentElement.style.removeProperty('font-family')
+    document.body.style.removeProperty('font-family')
   }
 }
 
 export const cleanupStyles = () => {
   cleanupStyleTag(STYLE_TAG1_ID)
   cleanupStyleTag(STYLE_TAG2_ID)
-  document.documentElement.style.removeProperty("font-family")
-  document.body.style.removeProperty("font-family")
+  document.documentElement.style.removeProperty('font-family')
+  document.body.style.removeProperty('font-family')
 }
 
 const cleanupStyleTag = (id) => $(`#${id}`)?.remove()
 
-const createStyleTag = (id, content, position = "before") => {
+const createStyleTag = (id, content, position = 'before') => {
   if (content) {
     cleanupStyleTag(id)
-    const styleTag = $$$("style", { innerHTML: minifyCssString(content) }, { id, type: "text/css" })
+    const styleTag = $$$('style', { innerHTML: minifyCssString(content) }, { id, type: 'text/css' })
 
-    if (position === "before") {
+    if (position === 'before') {
       document.documentElement.prepend(styleTag)
-    } else if (position === "after") {
+    } else if (position === 'after') {
       document.documentElement.appendChild(styleTag)
     } else {
-      throw Error("Incorrect position value")
+      throw Error('Incorrect position value')
     }
   }
 }
@@ -220,13 +225,13 @@ const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
   if (isMonospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)};`)
   cssRules.push(`
     :root {
-      ${rootCssVariables.join("\n")}
+      ${rootCssVariables.join('\n')}
     }
   `)
 
   if (isSansFont) {
     cssRules.push(`
-      :not(${EXCLUDED_TAGS.join(",")}) {
+      :not(${EXCLUDED_TAGS.join(',')}) {
         font-family: var(--${SANS_CLASS}) !important;
       }
     `)
@@ -236,14 +241,16 @@ const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
 }
 
 const getClassContent = (isSansFont, isMonospaceFont) => {
-  const styleTagContent = "*{font-family:inherit;}"
-  const sansStyleTagContent = isSansFont ? `:root,html,body{font-family:var(--${SANS_CLASS})!important;}` : ""
+  const styleTagContent = '*{font-family:inherit;}'
+  const sansStyleTagContent = isSansFont
+    ? `:root,html,body{font-family:var(--${SANS_CLASS})!important;}`
+    : ''
   const codeStyleTagContent = isMonospaceFont
     ? `
       code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
       code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
     `
-    : ""
+    : ''
 
   return styleTagContent + sansStyleTagContent + codeStyleTagContent
 }
@@ -255,15 +262,16 @@ const replaceFont = (element) => {
   if (!fontFamily) return
 
   if (/sans-serif|serif/.test(fontFamily)) {
-    element.style.setProperty("font-family", `var(--${SANS_CLASS})`, "important")
+    element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
   } else if (/monospace/.test(fontFamily)) {
-    element.style.setProperty("font-family", `var(--${MONOSPACE_CLASS})`, "important")
+    element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
   }
 }
 
 const replaceFonts = (elements) => elements.forEach(replaceFont)
 
-export const invokeReplacer = (parent = document) => replaceFonts(parent.querySelectorAll("pre, textarea, span, li, a, div, button"))
+export const invokeReplacer = (parent = document) =>
+  replaceFonts(parent.querySelectorAll('pre, textarea, span, li, a, div, button'))
 
 export const invokeObserver = () => {
   const observerOptions = { childList: true, subtree: true }
@@ -283,7 +291,7 @@ export const preview = () => {
     CONFIG?.get(
       {
         'font-default': '',
-        'font-fixed': '',
+        'font-mono': '',
       },
       function (settings) {
         if (simpleErrorHandler(tl('error_settings_load'))) {

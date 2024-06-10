@@ -11,7 +11,7 @@ Some web pages use bad or unreadable fonts, I created this extension because I w
 - Respects monospaced fonts
 - Respects iconic fonts (eg., "Font Awesome", "Material Icons")
 - No dependencies
-- Small content script bundle size (~ 3.49 kB │ gzip:  1.57 kB)
+- Small content script bundle size (~ 3.49 kB │ gzip: 1.57 kB)
 - Works very fast
 
 ## How to install?
@@ -26,6 +26,6 @@ Click on the extension icon to open the settings, then select the default font f
 
 If you switch to disabled this is disable font replacement only for current tab.
 
-| Before | After |
-| --- | --- |
+| Before                                   | After                                   |
+| ---------------------------------------- | --------------------------------------- |
 | ![alt text](screenshots/font-before.png) | ![alt text](screenshots/font-after.png) |

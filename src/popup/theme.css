@@ -105,10 +105,3 @@
     --md-sys-color-surface-container-highest: rgb(51 53 58);
   }
 }
-
-.surface {
-  position: relative;
-  border-radius: 16px;
-
-  --md-elevation-level: 3;
-}

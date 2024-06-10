@@ -1,9 +1,13 @@
-import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/elevation/elevation'
+import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/switch/switch'
 import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '../utils/fn'
 import './index.css'
 import './localize'
+
+let btn_switch, btn_reset, select_default, select_fixed
+
+let on = true
 
 const sendMessageToContentScript = (message) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -12,52 +16,35 @@ const sendMessageToContentScript = (message) => {
   })
 }
 
-const startPreview = () => {
-  sendMessageToContentScript({ action: 'executePreview' })
-}
-
-const removeEffect = () => {
-  sendMessageToContentScript({ action: 'executeCleanup' })
-}
+const startPreview = () => sendMessageToContentScript({ action: 'executePreview' })
+const removeEffect = () => sendMessageToContentScript({ action: 'executeCleanup' })
 
 const save = (settings) => {
-  CONFIG?.set(settings, function () {
+  CONFIG?.set(settings, () => {
     simpleErrorHandler(tl('error_settings_save')) || (on && startPreview())
   })
 }
 
 const reset = () => {
-  CONFIG?.clear(function () {
+  CONFIG?.clear(() => {
     simpleErrorHandler(tl('error_settings_reset'))
     removeEffect()
-    location.reload(true)
-  })
-}
 
-const fixFontRange = (fontRange) => {
-  const fontIDs = fontRange
-    .replace(/[^0-9A-F,\-]/gi, '')
-    .replace(/([\-,]){2,}/g, '$1')
-    .replace(/,-[^,]+|[^,]+-,/g, '')
-    .split(',')
+    select_default.value = ''
+    select_fixed.value = ''
 
-  const validFontIDs = fontIDs.filter(function (fontID) {
-    if (/-/.test(fontID)) {
-      let [start, end] = fontID.split('-').map(id => parseInt(id, 16))
-      if (start <= end && start >= 0 && end <= 1114111) return true
-    } else {
-      fontID = parseInt(fontID, 16)
-      if (fontID > 0 && fontID <= 1114111) return true
+    if (on === false) {
+      handleSwitch()
     }
-    return false
+
+    initSwitchState()
   })
-  return validFontIDs.join(',')
 }
 
 const saveSettings = () => {
   const settings = {
     'font-default': select_default.value.trim(),
-    'font-fixed': select_fixed.value.trim(),
+    'font-mono': select_fixed.value.trim(),
   }
   save(settings)
 }
@@ -65,8 +52,7 @@ const saveSettings = () => {
 const saveSwitchState = (state) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs[0]
-    const tabURL = currentTab.url
-    const storageKey = `switch_state_${tabURL}`
+    const storageKey = `switch_state_${currentTab.url}`
     chrome.storage.sync.set({ [storageKey]: state })
   })
 }
@@ -75,8 +61,7 @@ const getSwitchState = () => {
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const currentTab = tabs[0]
-      const tabURL = currentTab.url
-      const storageKey = `switch_state_${tabURL}`
+      const storageKey = `switch_state_${currentTab.url}`
       chrome.storage.sync.get([storageKey], (result) => {
         resolve(result[storageKey])
       })
@@ -90,37 +75,40 @@ const initSwitchState = async () => {
   btn_switch.selected = on
 }
 
-const bindEvents = () => {
-  btn_switch.addEventListener('click', () => {
-    on = !on
-    saveSwitchState(on)
-    LOCAL_CONFIG?.set({ off: !on }, () => {
-      simpleErrorHandler(tl('error_settings_save')) ||
-        ((btn_switch.className = on ? 'on' : 'off'), on ? startPreview() : removeEffect())
-    })
-  }, false)
+const handleSwitch = () => {
+  on = !on
+  saveSwitchState(on)
+  LOCAL_CONFIG?.set({ off: !on }, () => {
+    simpleErrorHandler(tl('error_settings_save')) ||
+      ((btn_switch.className = on ? 'on' : 'off'), on ? startPreview() : removeEffect())
+  })
+}
 
+// Event Binding
+const bindEvents = () => {
+  btn_switch.addEventListener('click', handleSwitch, false)
   btn_reset.addEventListener('click', reset, false)
   select_default.addEventListener('change', saveSettings, false)
   select_fixed.addEventListener('change', saveSettings, false)
 }
 
-const initSettings = (a, c) => {
+// Initialization
+const initSettings = (fontSettings, fontList) => {
   btn_switch = $('#switch')
   btn_reset = $('#reset')
   select_default = $('#font-default')
-  select_fixed = $('#font-fixed')
+  select_fixed = $('#font-mono')
 
   bindEvents()
   initSwitchState()
 
-  LOCAL_CONFIG?.get({ off: false }, (a) => {
+  LOCAL_CONFIG?.get({ off: false }, (config) => {
     simpleErrorHandler(tl('error_settings_load')) ||
-      ((btn_switch.selected = !a.off), (on = !a.off))
+      ((btn_switch.selected = !config.off), (on = !config.off))
   })
 
   // sort font list alphabetically
-  c.sort((a, b) => a.displayName.localeCompare(b.displayName))
+  fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
   const defaultOption = $$$('option', { innerText: tl('settings_font_default') }, { value: '' })
 
   const createOption = (font) => {
@@ -130,31 +118,31 @@ const initSettings = (a, c) => {
     return option
   }
 
-  [select_default, select_fixed].forEach(select => {
+  ;[select_default, select_fixed].forEach((select) => {
     select.appendChild(defaultOption.cloneNode(true))
-    c.forEach(font => {
-      select.appendChild(createOption(font))
-    })
+    fontList.forEach((font) => select.appendChild(createOption(font)))
   })
 
-  select_default.value = a['font-default']
-  select_fixed.value = a['font-fixed']
+  select_default.value = fontSettings['font-default']
+  select_fixed.value = fontSettings['font-mono']
 }
 
-var on,
-  btn_switch,
-  btn_reset,
-  select_default,
-  select_fixed
-
-window.addEventListener('load', () => {
-  CONFIG?.get({
-    'font-default': '',
-    'font-fixed': '',
-  }, (a) => {
-    simpleErrorHandler(tl('error_settings_load')) ||
-      chrome.fontSettings.getFontList((c) => {
-        initSettings(a, c)
-      })
-  })
-}, false)
+// Main
+window.addEventListener(
+  'load',
+  () => {
+    CONFIG?.get(
+      {
+        'font-default': '',
+        'font-mono': '',
+      },
+      (fontSettings) => {
+        simpleErrorHandler(tl('error_settings_load')) ||
+          chrome.fontSettings.getFontList((fontList) => {
+            initSettings(fontSettings, fontList)
+          })
+      },
+    )
+  },
+  false,
+)

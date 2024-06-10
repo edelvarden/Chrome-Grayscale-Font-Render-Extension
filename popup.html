@@ -8,8 +8,11 @@
   </head>
   <body>
     <main>
-      <div id="settings" class="settings-container surface">
+
+      <div class="surface">
         <md-elevation></md-elevation>
+      <div id="settings" class="settings-container">
+        
 
         <!-- Default/Fixed Fonts selection -->
         <section class="setting-inner">
@@ -41,13 +44,14 @@
           </div>
           <div class="settings__item">
             <div class="select-label">
-              <span class="select-label__title" i18n="font_fixed"></span>
-              <span class="select-label__description" i18n="font_fixed__description"></span>
+              <span class="select-label__title" i18n="font_mono"></span>
+              <span class="select-label__description" i18n="font_mono__description"></span>
             </div>
-            <div><select id="font-fixed" class="select"></select></div>
+            <div><select id="font-mono" class="select"></select></div>
           </div>
         </section>
       </div>
+    </div>
     </main>
     <script type="module" src="/src/popup/index.js"></script>
   </body>

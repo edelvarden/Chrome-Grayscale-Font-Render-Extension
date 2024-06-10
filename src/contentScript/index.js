@@ -31,10 +31,9 @@ LOCAL_CONFIG?.get({ off: !1 }, function (c) {
     CONFIG?.get(
       {
         'font-default': '',
-        'font-fixed': '',
+        'font-mono': '',
       },
       function (settings) {
-
         if (simpleErrorHandler(tl('error_settings_load'))) {
           return
         }

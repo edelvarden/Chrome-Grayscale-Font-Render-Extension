@@ -1,6 +1,6 @@
-@import "./reset.css";
-@import "./theme.css";
-@import "./controls/select.css";
+@import './reset.css';
+@import './theme.css';
+@import './controls/select.css';
 
 html {
   /* background: #202124; */
@@ -19,11 +19,20 @@ body {
   padding-bottom: 20px;
 }
 
+.surface {
+  position: relative;
+  --md-elevation-level: 1;
+}
+
+.surface,
+.settings-container {
+  border-radius: 1.7rem;
+}
+
 .settings-container {
   margin-top: 21px;
   /* background-color: #292a2d; */
   background-color: var(--md-sys-color-surface-container);
-  border-radius: 1.7rem;
   overflow: hidden;
   padding-bottom: 10px;
 }
@@ -38,7 +47,7 @@ body {
   outline: 0;
   padding-bottom: 4px;
   padding-top: 8px;
-  font-family: "Georgia", "Times New Roman", "Times", serif;
+  font-family: 'Georgia', 'Times New Roman', 'Times', serif;
 }
 
 .setting-inner {
