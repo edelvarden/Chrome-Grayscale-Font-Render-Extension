@@ -5,7 +5,6 @@ import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '../utils/f
 import './index.css'
 import './localize'
 
-// Function to send message to content script
 const sendMessageToContentScript = (message) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs[0]
@@ -13,17 +12,12 @@ const sendMessageToContentScript = (message) => {
   })
 }
 
-// Trigger execution of preview function in content script
 const startPreview = () => {
-  sendMessageToContentScript({
-    action: 'executePreview',
-  })
+  sendMessageToContentScript({ action: 'executePreview' })
 }
 
 const removeEffect = () => {
-  sendMessageToContentScript({
-    action: 'executeCleanup',
-  })
+  sendMessageToContentScript({ action: 'executeCleanup' })
 }
 
 const save = (settings) => {
@@ -49,12 +43,12 @@ const fixFontRange = (fontRange) => {
 
   const validFontIDs = fontIDs.filter(function (fontID) {
     if (/-/.test(fontID)) {
-      var b
-      fontID = fontID.split('-')
-      b = parseInt(fontID[0], 16)
-      fontID = parseInt(fontID[1], 16)
-      if (b <= fontID && 0 <= b && 1114111 >= fontID) return true
-    } else if (((fontID = parseInt(fontID, 16)), 0 < fontID && 1114111 > fontID)) return true
+      let [start, end] = fontID.split('-').map(id => parseInt(id, 16))
+      if (start <= end && start >= 0 && end <= 1114111) return true
+    } else {
+      fontID = parseInt(fontID, 16)
+      if (fontID > 0 && fontID <= 1114111) return true
+    }
     return false
   })
   return validFontIDs.join(',')
@@ -78,7 +72,7 @@ const saveSwitchState = (state) => {
 }
 
 const getSwitchState = () => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const currentTab = tabs[0]
       const tabURL = currentTab.url
@@ -92,30 +86,22 @@ const getSwitchState = () => {
 
 const initSwitchState = async () => {
   const switchState = await getSwitchState()
-  btn_switch.checked = switchState !== false
+  on = switchState !== false
+  btn_switch.selected = on
 }
 
 const bindEvents = () => {
-  btn_switch.addEventListener(
-    'click',
-    function () {
-      on = !on
-      saveSwitchState(on)
-      LOCAL_CONFIG?.set({ off: !on }, function () {
-        simpleErrorHandler(tl('error_settings_save')) ||
-          ((btn_switch.className = on ? 'on' : 'off'), on ? startPreview() : removeEffect())
-      })
-    },
-    false,
-  )
+  btn_switch.addEventListener('click', () => {
+    on = !on
+    saveSwitchState(on)
+    LOCAL_CONFIG?.set({ off: !on }, () => {
+      simpleErrorHandler(tl('error_settings_save')) ||
+        ((btn_switch.className = on ? 'on' : 'off'), on ? startPreview() : removeEffect())
+    })
+  }, false)
 
-  // Event listener for reset button
   btn_reset.addEventListener('click', reset, false)
-
-  // Event listener for select_default
   select_default.addEventListener('change', saveSettings, false)
-
-  // Event listener for select_fixed
   select_fixed.addEventListener('change', saveSettings, false)
 }
 
@@ -126,61 +112,49 @@ const initSettings = (a, c) => {
   select_fixed = $('#font-fixed')
 
   bindEvents()
-
   initSwitchState()
 
-  LOCAL_CONFIG?.get({ off: !1 }, function (a) {
+  LOCAL_CONFIG?.get({ off: false }, (a) => {
     simpleErrorHandler(tl('error_settings_load')) ||
-      ((btn_switch.checked = a.off ? false : true), (on = !a.off))
+      ((btn_switch.selected = !a.off), (on = !a.off))
   })
 
-  var b,
-    h,
-    d = $$$('option', { innerText: tl('settings_font_default') }, { value: '' })
-
-  // sort alphabetically
+  // sort font list alphabetically
   c.sort((a, b) => a.displayName.localeCompare(b.displayName))
+  const defaultOption = $$$('option', { innerText: tl('settings_font_default') }, { value: '' })
 
-  font_list.appendChild(d)
+  const createOption = (font) => {
+    const option = document.createElement('option')
+    option.value = font.fontId
+    option.innerText = font.displayName
+    return option
+  }
 
-  var g
-
-  for (var f = 0, k = c.length; f < k; ++f)
-    (b = c[f].displayName),
-      (h = c[f].fontId),
-      (g = d.cloneNode()),
-      (g.value = h),
-      (g.innerText = b),
-      font_list.appendChild(g)
-  ;[select_default, select_fixed].forEach(function (a) {
-    a.appendChild(font_list.cloneNode(!0))
+  [select_default, select_fixed].forEach(select => {
+    select.appendChild(defaultOption.cloneNode(true))
+    c.forEach(font => {
+      select.appendChild(createOption(font))
+    })
   })
 
   select_default.value = a['font-default']
   select_fixed.value = a['font-fixed']
 }
 
-var font_list = document.createDocumentFragment(),
-  on,
+var on,
   btn_switch,
   btn_reset,
   select_default,
   select_fixed
-window.addEventListener(
-  'load',
-  function () {
-    CONFIG?.get(
-      {
-        'font-default': '',
-        'font-fixed': '',
-      },
-      function (a) {
-        simpleErrorHandler(tl('error_settings_load')) ||
-          chrome.fontSettings.getFontList(function (c) {
-            initSettings(a, c)
-          })
-      },
-    )
-  },
-  !1,
-)
+
+window.addEventListener('load', () => {
+  CONFIG?.get({
+    'font-default': '',
+    'font-fixed': '',
+  }, (a) => {
+    simpleErrorHandler(tl('error_settings_load')) ||
+      chrome.fontSettings.getFontList((c) => {
+        initSettings(a, c)
+      })
+  })
+}, false)
