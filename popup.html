@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/icon/logo.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title i18n="settings_title_page"></title>
+  </head>
+  <body>
+    <main>
+      <!-- Custom Fonts -->
+      <h2 class="title" i18n="settings_title_fonts"></h2>
+
+      <div id="settings" class="settings-container">
+        <!-- Enable/Disable button -->
+        <section class="settings__button">
+          <label class="pure-material-switch">
+            <input id="switch" type="checkbox" checked />
+            <span><span class="enabled" i18n="button_enabled"></span><span class="disabled" i18n="button_disabled"></span></span>
+          </label>
+        </section>
+
+        <!-- Default/Fixed Fonts selection -->
+        <section class="setting-inner">
+          <div class="settings__item">
+            <div>
+              <span i18n="settings_title_font_default"></span>
+              <!-- <span class="important-mark">*</span> -->
+            </div>
+            <div><select id="font-default" class="select"></select></div>
+          </div>
+          <div class="settings__item">
+            <div i18n="settings_title_font_fixed"></div>
+            <div><select id="font-fixed" class="select"></select></div>
+          </div>
+        </section>
+
+        <!-- Save/Reset Command buttons -->
+        <section class="settings__buttons">
+          <button id="reset" class="button" i18n="settings_reset"></button>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="/src/popup/index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+:root {
+  --md-arrow-width: 10px;
+  --md-select-bg-color: rgba(0, 0, 0, 0.3);
+  --md-select-focus-shadow-color: rgba(138, 180, 248, 0.5);
+  --md-select-option-bg-color: #292a2d;
+  --md-select-side-padding: 8px;
+  --md-select-text-color: #e8eaed;
+}
+
+.select {
+  margin-left: auto;
+  appearance: none;
+  background: url('../../assets/arrow_down.svg') calc(100% - var(--md-select-side-padding)) center no-repeat;
+  background-color: var(--md-select-bg-color);
+  background-size: var(--md-arrow-width);
+  border: none;
+  border-radius: 4px;
+  color: var(--md-select-text-color);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  max-width: 100%;
+  padding-bottom: 6px;
+  padding-inline-end: calc(var(--md-select-side-padding) + var(--md-arrow-width) + 3px);
+  padding-inline-start: var(--md-select-side-padding);
+  padding-top: 6px;
+  width: var(--md-select-width, 200px);
+}
+
+.select option {
+  background-color: var(--md-select-option-bg-color);
+}
+
+.select {
+  outline: 2px solid transparent;
+}
+
+.select:focus {
+  outline-color: var(--md-select-focus-shadow-color);
+}

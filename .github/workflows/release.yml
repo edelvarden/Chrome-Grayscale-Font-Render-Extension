@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - "package.json" # Trigger workflow on changes in package.json
+
+jobs:
+  build:
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the extension
+        run: npm run build
+
+      - name: Install web-ext
+        run: |
+          npm install --global web-ext
+
+      - name: Pack extension with web-ext
+        run: |
+          web-ext build --source-dir=build --artifacts-dir=build
+
+      - name: Read version from package.json
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create version tag
+        run: |
+          TAG_NAME="v${{ env.VERSION }}"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+
+      - name: Create and Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
+          files: |
+            build/*.zip
+            build/*.crx
+            build/*.xpi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

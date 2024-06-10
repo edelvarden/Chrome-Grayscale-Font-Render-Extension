@@ -1,0 +1,108 @@
+@import "./controls/button.css";
+@import "./controls/select.css";
+@import "./controls/switch.css";
+
+html {
+  background: #202124;
+  color: var(--md-select-text-color);
+}
+body {
+  min-width: 400px;
+  max-width: 670px;
+  margin: 0 auto;
+  font: 18px sans-serif;
+  overflow-x: hidden;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+}
+
+.settings-container {
+  background-color: #292a2d;
+  box-shadow: rgba(0, 0, 0, 0.3) 0 1px 2px 0, rgba(0, 0, 0, 0.15) 0 2px 6px 2px;
+  border-radius: 8px;
+  overflow: hidden;
+  padding-bottom: 10px;
+}
+
+.title {
+  color: #e8eaed;
+  font-size: 108%;
+  font-weight: 400;
+  letter-spacing: 0.25px;
+  margin-bottom: 12px;
+  margin-top: 21px;
+  outline: 0;
+  padding-bottom: 4px;
+  padding-top: 8px;
+}
+
+.setting-inner {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.settings__item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1em;
+  align-items: center;
+  min-height: 48px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.settings__button {
+  display: flex;
+}
+
+.settings__buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 8px;
+  gap: 8px;
+}
+
+.important-mark {
+  color: #f28b82;
+  margin-left: 4px;
+  user-select: none;
+}
+
+select,
+button {
+  border-radius: 4px;
+  font-size: 16px;
+  margin: 0 1px 0 0;
+}
+
+select,
+.input {
+  outline: none;
+}
+
+.input {
+  border: 1px solid #bfbfbf;
+  border-radius: 2px;
+  box-sizing: border-box;
+  color: #444;
+  min-width: 50px;
+  text-align: center;
+}
+
+#trans-add,
+.trans-del {
+  font-family: monospace;
+  font-weight: bolder;
+  width: 1.3em;
+  height: 1.3em;
+  margin: 0;
+  padding: 0;
+}
