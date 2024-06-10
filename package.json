@@ -1,7 +1,7 @@
 {
   "name": "font-customizer",
   "displayName": "Font-Customizer",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "author": "https://github.com/edelvarden",
   "description": "",
   "type": "module",
@@ -15,9 +15,12 @@
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.19",
-    "gulp": "^4.0.2",
+    "gulp": "^5.0.0",
     "gulp-zip": "^6.0.0",
     "prettier": "^3.0.3",
     "vite": "^4.4.11"
+  },
+  "dependencies": {
+    "@material/web": "^1.5.0"
   }
 }

@@ -4,8 +4,8 @@ import packageData from '../package.json'
 const isDev = process.env.NODE_ENV == 'development'
 
 export default defineManifest({
-  name: `${"__MSG_EXT_NAME__" || packageData.displayName || packageData.name}${isDev ? ` ➡️ Dev` : ''}`,
-  description: "__MSG_EXT_DESCRIPTION__" || packageData.description,
+  name: `${'__MSG_EXT_NAME__' || packageData.displayName || packageData.name}${isDev ? ` ➡️ Dev` : ''}`,
+  description: '__MSG_EXT_DESCRIPTION__' || packageData.description,
   version: packageData.version,
   manifest_version: 3,
   default_locale: 'en',

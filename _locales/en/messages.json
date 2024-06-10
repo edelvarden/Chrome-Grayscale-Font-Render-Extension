@@ -17,28 +17,19 @@
   "settings_font_default": {
     "message": "(none)"
   },
-  "settings_reset": {
-    "message": "Reset"
-  },
-  "settings_save": {
-    "message": "Save"
-  },
-  "settings_title_font_default": {
+  "font_default": {
     "message": "Default"
   },
-  "settings_title_font_fixed": {
-    "message": "Code/Fixed width"
+  "font_default__description": {
+    "message": "serif, sans-serif"
+  },
+  "font_fixed": {
+    "message": "Code"
+  },
+  "font_fixed__description": {
+    "message": "monospace"
   },
   "settings_title_fonts": {
     "message": "Custom Fonts"
-  },
-  "settings_title_page": {
-    "message": "Font Settings"
-  },
-  "button_enabled": {
-    "message": "Enabled"
-  },
-  "button_disabled": {
-    "message": "Disabled"
   }
 }

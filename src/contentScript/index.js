@@ -34,11 +34,11 @@ LOCAL_CONFIG?.get({ off: !1 }, function (c) {
         'font-fixed': '',
       },
       function (settings) {
+
         if (simpleErrorHandler(tl('error_settings_load'))) {
           return
         }
 
-        console.log(settings)
         init(settings)
       },
     )

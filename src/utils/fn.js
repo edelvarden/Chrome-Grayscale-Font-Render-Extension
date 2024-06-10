@@ -103,25 +103,26 @@ const generateHash = (length) => {
   return Array.from({ length }, () => randomSymbols[Math.floor(Math.random() * randomSymbols.length)]).join("")
 }
 
+const addHashSuffix = (prefix) => `${prefix}__${generateHash(6)}`
 /**
  * A reference to the unique class name for sans-serif font.
  */
-const SANS_CLASS = `sans__${generateHash(6)}`
+const SANS_CLASS = addHashSuffix('sans')
 
 /**
  * A reference to the unique class name for monospace font.
  */
-const MONOSPACE_CLASS = `monospace__${generateHash(6)}`
+const MONOSPACE_CLASS = addHashSuffix('monospace')
 
 /**
  * A reference to the unique id for main style tag.
  */
-export const STYLE_TAG1_ID = `style1__${generateHash(6)}`
+export const STYLE_TAG1_ID = addHashSuffix('style1')
 
 /**
  * A reference to the unique id for secondary style tag.
  */
-export const STYLE_TAG2_ID = `style2__${generateHash(6)}`
+export const STYLE_TAG2_ID = addHashSuffix('style2')
 
 /**
  * A reference to excluded tags for main replacement function.
@@ -145,23 +146,22 @@ const EXCLUDED_TAGS = [
 ]
 
 export const init = (settings) => {
-  const defaultFont = settings["font-default"]
-  const fixedFont = settings["font-fixed"]
-  const isDefaultFont = defaultFont && defaultFont.length > 0
-  const isMonospaceFont = fixedFont && fixedFont.length > 0
+  const { "font-default": sansFont, "font-fixed": monospaceFont } = settings
+  const isSansFont = sansFont && sansFont.length > 0
+  const isMonospaceFont = monospaceFont && monospaceFont.length > 0
 
-  if (!isDefaultFont && !isMonospaceFont) {
+  if (!isSansFont && !isMonospaceFont) {
     cleanupStyles()
     return
   }
 
-  const cssRules = getCssRules(isDefaultFont, isMonospaceFont, defaultFont, fixedFont)
-  const classContent = getClassContent(isDefaultFont, isMonospaceFont)
+  const cssRules = getCssRules(isSansFont, isMonospaceFont, sansFont, monospaceFont)
+  const classContent = getClassContent(isSansFont, isMonospaceFont)
 
   createStyleTag(STYLE_TAG1_ID, cssRules.join(""), "before")
   createStyleTag(STYLE_TAG2_ID, classContent, "after")
 
-  if (isDefaultFont) {
+  if (isSansFont) {
     document.documentElement.style.setProperty("font-family", `var(--${SANS_CLASS})`, "important")
     document.body.style.setProperty("font-family", `var(--${SANS_CLASS})`, "important")
   } else {
@@ -194,11 +194,11 @@ const createStyleTag = (id, content, position = "before") => {
   }
 }
 
-const getCssRules = (isDefaultFont, isMonospaceFont, defaultFont, fixedFont) => {
+const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
   const cssRules = []
 
-  if (isDefaultFont) {
-    const normalizedDefaultFont = fixName(defaultFont)
+  if (isSansFont) {
+    const normalizedDefaultFont = fixName(sansFont)
     cssRules.push(`
       @font-face {
         font-style: normal;
@@ -216,15 +216,15 @@ const getCssRules = (isDefaultFont, isMonospaceFont, defaultFont, fixedFont) => 
   }
 
   const rootCssVariables = []
-  if (isDefaultFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(defaultFont)};`)
-  if (isMonospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(fixedFont)};`)
+  if (isSansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)};`)
+  if (isMonospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)};`)
   cssRules.push(`
     :root {
       ${rootCssVariables.join("\n")}
     }
   `)
 
-  if (isDefaultFont) {
+  if (isSansFont) {
     cssRules.push(`
       :not(${EXCLUDED_TAGS.join(",")}) {
         font-family: var(--${SANS_CLASS}) !important;
@@ -235,9 +235,9 @@ const getCssRules = (isDefaultFont, isMonospaceFont, defaultFont, fixedFont) => 
   return cssRules
 }
 
-const getClassContent = (isDefaultFont, isMonospaceFont) => {
+const getClassContent = (isSansFont, isMonospaceFont) => {
   const styleTagContent = "*{font-family:inherit;}"
-  const sansStyleTagContent = isDefaultFont ? `:root,html,body{font-family:var(--${SANS_CLASS})!important;}` : ""
+  const sansStyleTagContent = isSansFont ? `:root,html,body{font-family:var(--${SANS_CLASS})!important;}` : ""
   const codeStyleTagContent = isMonospaceFont
     ? `
       code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
@@ -275,7 +275,7 @@ export const invokeObserver = () => {
 const getVariable = (name) => getComputedStyle(document.documentElement).getPropertyValue(name)
 
 export const preview = () => {
-  chrome.storage.local.get({ off: false }, function (a) {
+  LOCAL_CONFIG.get({ off: false }, function (a) {
     if (simpleErrorHandler(tl('error_settings_load')) || a.off) {
       return
     }

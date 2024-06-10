@@ -8,36 +8,44 @@
   </head>
   <body>
     <main>
-      <!-- Custom Fonts -->
-      <h2 class="title" i18n="settings_title_fonts"></h2>
-
-      <div id="settings" class="settings-container">
-        <!-- Enable/Disable button -->
-        <section class="settings__button">
-          <label class="pure-material-switch">
-            <input id="switch" type="checkbox" checked />
-            <span><span class="enabled" i18n="button_enabled"></span><span class="disabled" i18n="button_disabled"></span></span>
-          </label>
-        </section>
+      <div id="settings" class="settings-container surface">
+        <md-elevation></md-elevation>
 
         <!-- Default/Fixed Fonts selection -->
         <section class="setting-inner">
+          <!-- Custom Fonts -->
           <div class="settings__item">
-            <div>
-              <span i18n="settings_title_font_default"></span>
-              <!-- <span class="important-mark">*</span> -->
+            <h2 class="title" i18n="settings_title_fonts"></h2>
+
+            <div style="display: flex; flex-direction: row; align-items: center; gap: 1rem;">
+              <!-- Reset settings button -->
+            <md-filled-tonal-icon-button id="reset" aria-label="reset-settings">
+              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z"/></svg>
+            </md-filled-tonal-icon-button>
+
+            <!-- Enable/Disable button -->
+            <label>
+              <md-switch id="switch" selected></md-switch>
+            </label>
             </div>
-            <div><select id="font-default" class="select"></select></div>
           </div>
           <div class="settings__item">
-            <div i18n="settings_title_font_fixed"></div>
+            <div class="select-label">
+              <span class="select-label__title" i18n="font_default"></span>
+              <!-- <span class="important-mark">*</span> -->
+              <span class="select-label__description" i18n="font_default__description"></span>
+            </div>
+            <div>
+              <select id="font-default" class="select"></select>
+            </div>
+          </div>
+          <div class="settings__item">
+            <div class="select-label">
+              <span class="select-label__title" i18n="font_fixed"></span>
+              <span class="select-label__description" i18n="font_fixed__description"></span>
+            </div>
             <div><select id="font-fixed" class="select"></select></div>
           </div>
-        </section>
-
-        <!-- Save/Reset Command buttons -->
-        <section class="settings__buttons">
-          <button id="reset" class="button" i18n="settings_reset"></button>
         </section>
       </div>
     </main>

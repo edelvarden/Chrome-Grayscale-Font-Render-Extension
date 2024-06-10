@@ -1,44 +1,29 @@
-import {
-  $,
-  $$,
-  $$$,
-  CONFIG,
-  LOCAL_CONFIG,
-  STYLE_TAG1_ID,
-  STYLE_TAG2_ID,
-  simpleErrorHandler,
-  tl
-} from '../utils/fn'
-import './localize'
+import '@material/web/iconbutton/filled-tonal-icon-button'
+import '@material/web/elevation/elevation'
+import '@material/web/switch/switch'
+import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '../utils/fn'
 import './index.css'
-
-const getActiveTab = async () => {
-  const activeTab = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  })
-  return activeTab && activeTab
-}
+import './localize'
 
 // Function to send message to content script
 const sendMessageToContentScript = (message) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0];
-    chrome.tabs.sendMessage(activeTab.id, message);
-  });
-};
+    const activeTab = tabs[0]
+    chrome.tabs.sendMessage(activeTab.id, message)
+  })
+}
 
 // Trigger execution of preview function in content script
 const startPreview = () => {
   sendMessageToContentScript({
-    action: 'executePreview'
-  });
-};
+    action: 'executePreview',
+  })
+}
 
 const removeEffect = () => {
   sendMessageToContentScript({
-    action: 'executeCleanup'
-  });
+    action: 'executeCleanup',
+  })
 }
 
 const save = (settings) => {

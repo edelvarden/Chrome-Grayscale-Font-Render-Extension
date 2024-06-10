@@ -1,10 +1,14 @@
 :root {
   --md-arrow-width: 10px;
-  --md-select-bg-color: rgba(0, 0, 0, 0.3);
-  --md-select-focus-shadow-color: rgba(138, 180, 248, 0.5);
-  --md-select-option-bg-color: #292a2d;
+  /* --md-select-bg-color: rgba(0, 0, 0, 0.3); */
+  --md-select-bg-color: var(--md-sys-color-surface);
+  /* --md-select-focus-shadow-color: rgba(138, 180, 248, 0.5); */
+  --md-select-focus-shadow-color: var(--md-sys-color-primary);
+  /* --md-select-option-bg-color: #292a2d; */
+  --md-select-option-bg-color: var(--md-sys-color-surface-container);
   --md-select-side-padding: 8px;
-  --md-select-text-color: #e8eaed;
+  /* --md-select-text-color: #e8eaed; */
+  --md-select-text-color: var(--md-sys-color-on-background);
 }
 
 .select {
@@ -33,7 +37,8 @@
 }
 
 .select {
-  outline: 2px solid transparent;
+  outline: 3px solid transparent;
+  outline-offset: -1px;
 }
 
 .select:focus {
