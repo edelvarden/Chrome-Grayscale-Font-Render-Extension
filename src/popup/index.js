@@ -3,7 +3,7 @@ import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/switch/switch'
 import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '../utils/fn'
 import './index.css'
-import './localize'
+import '../localize'
 
 let btn_switch, btn_reset, select_default, select_fixed
 
