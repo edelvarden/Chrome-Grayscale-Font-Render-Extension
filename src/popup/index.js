@@ -2,7 +2,7 @@ import '@material/web/elevation/elevation'
 import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/switch/switch'
 import '../localize'
-import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '../utils/fn'
+import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '@utils/fn'
 import './index.css'
 
 let btn_switch, btn_reset, select_default, select_fixed

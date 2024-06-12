@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import path from 'path'
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './src/manifest.js'
 
@@ -16,5 +17,12 @@ export default defineConfig(({ mode }) => {
     },
 
     plugins: [crx({ manifest })],
+    resolve: {
+      alias: {
+        '@contentScript': path.resolve(__dirname, 'src/contentScript'),
+        '@popup': path.resolve(__dirname, 'src/popup'),
+        '@utils': path.resolve(__dirname, 'src/utils'),
+      },
+    }
   }
 })

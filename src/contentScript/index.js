@@ -5,7 +5,7 @@
 - https://developer.mozilla.org/en-US/docs/Web/API/Document/createDocumentFragment
 - https://react.dev/learn
 */
-import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fn.js'
+import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fn.js'
 
 invokeObserver()
 
