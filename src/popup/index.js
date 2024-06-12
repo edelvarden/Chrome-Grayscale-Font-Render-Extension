@@ -11,8 +11,10 @@ let on = true
 
 const sendMessageToContentScript = (message) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0]
-    chrome.tabs.sendMessage(activeTab.id, message)
+    if (tabs.length > 0) {
+      const activeTab = tabs[0]
+      chrome.tabs.sendMessage(activeTab.id, message)
+    }
   })
 }
 

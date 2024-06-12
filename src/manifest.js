@@ -27,17 +27,5 @@ export default defineManifest({
       js: ['src/contentScript/index.js'],
     },
   ],
-  web_accessible_resources: [
-    {
-      resources: [
-        'icons/16x16.png',
-        'icons/32x32.png',
-        'icons/48x48.png',
-        'icons/96x96.png',
-        'icons/128x128.png',
-      ],
-      matches: [],
-    },
-  ],
   permissions: ['activeTab', 'tabs', 'storage', 'scripting', 'unlimitedStorage', 'fontSettings'],
 })

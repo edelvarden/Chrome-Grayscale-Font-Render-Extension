@@ -13,7 +13,7 @@ const archiveName = `${extName}-${extVersion}.zip`;
 
 try {
   await zip(sourcePath, archiveName);
-  console.log(`Successfully zipped '${sourcePath}' to '${archiveName}'.`);
+  console.log(`✔ Successfully zipped '${sourcePath}' to '${archiveName}'.`);
 } catch (error) {
-  console.error(`Error occurred while zipping '${sourcePath}' to '${archiveName}':`, error);
+  console.error(`❌ Error occurred while zipping '${sourcePath}' to '${archiveName}':`, error);
 }
