@@ -1,9 +1,9 @@
 import '@material/web/elevation/elevation'
 import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/switch/switch'
+import '../localize'
 import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '../utils/fn'
 import './index.css'
-import '../localize'
 
 let btn_switch, btn_reset, select_default, select_fixed
 
@@ -23,13 +23,13 @@ const removeEffect = () => sendMessageToContentScript({ action: 'executeCleanup'
 
 const save = (settings) => {
   CONFIG?.set(settings, () => {
-    simpleErrorHandler(tl('error_settings_save')) || (on && startPreview())
+    simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) || (on && startPreview())
   })
 }
 
 const reset = () => {
   CONFIG?.clear(() => {
-    simpleErrorHandler(tl('error_settings_reset'))
+    simpleErrorHandler(tl('ERROR_SETTINGS_RESET'))
     removeEffect()
 
     select_default.value = ''
@@ -81,7 +81,7 @@ const handleSwitch = () => {
   on = !on
   saveSwitchState(on)
   LOCAL_CONFIG?.set({ off: !on }, () => {
-    simpleErrorHandler(tl('error_settings_save')) ||
+    simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) ||
       ((btn_switch.className = on ? 'on' : 'off'), on ? startPreview() : removeEffect())
   })
 }
@@ -105,13 +105,13 @@ const initSettings = (fontSettings, fontList) => {
   initSwitchState()
 
   LOCAL_CONFIG?.get({ off: false }, (config) => {
-    simpleErrorHandler(tl('error_settings_load')) ||
+    simpleErrorHandler(tl('ERROR_SETTINGS_LOAD')) ||
       ((btn_switch.selected = !config.off), (on = !config.off))
   })
 
   // sort font list alphabetically
   fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
-  const defaultOption = $$$('option', { innerText: tl('settings_font_default') }, { value: '' })
+  const defaultOption = $$$('option', { innerText: tl('SETTINGS_FONT_DEFAULT') }, { value: '' })
 
   const createOption = (font) => {
     const option = document.createElement('option')
@@ -139,7 +139,7 @@ window.addEventListener(
         'font-mono': '',
       },
       (fontSettings) => {
-        simpleErrorHandler(tl('error_settings_load')) ||
+        simpleErrorHandler(tl('ERROR_SETTINGS_LOAD')) ||
           chrome.fontSettings.getFontList((fontList) => {
             initSettings(fontSettings, fontList)
           })

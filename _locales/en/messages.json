@@ -5,31 +5,31 @@
   "EXT_NAME": {
     "message": "Font Customizer"
   },
-  "error_settings_load": {
+  "ERROR_SETTINGS_LOAD": {
     "message": "Error: cannot load settings!"
   },
-  "error_settings_reset": {
+  "ERROR_SETTINGS_RESET": {
     "message": "Error: cannot reset settings!"
   },
-  "error_settings_save": {
+  "ERROR_SETTINGS_SAVE": {
     "message": "Error: cannot save settings!"
   },
-  "settings_font_default": {
+  "SETTINGS_FONT_DEFAULT": {
     "message": "(none)"
   },
-  "font_default": {
+  "FONT_DEFAULT": {
     "message": "Default"
   },
-  "font_default__description": {
+  "FONT_DEFAULT_DESCRIPTION": {
     "message": "serif, sans-serif"
   },
-  "font_mono": {
+  "FONT_MONOSPACE": {
     "message": "Code"
   },
-  "font_mono__description": {
+  "FONT_MONOSPACE_DESCRIPTION": {
     "message": "monospace"
   },
-  "settings_title_fonts": {
+  "SETTINGS_TITLE_FONTS": {
     "message": "Custom Fonts"
   }
 }
