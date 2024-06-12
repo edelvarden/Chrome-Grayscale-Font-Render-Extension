@@ -4,20 +4,21 @@ import packageData from '../package.json'
 const isDev = process.env.NODE_ENV == 'development'
 
 export default defineManifest({
-  name: `${'__MSG_EXT_NAME__' || packageData.displayName || packageData.name}${isDev ? ` ➡️ Dev` : ''}`,
+  name: `${'__MSG_EXT_NAME__' || packageData.displayName || packageData.name}${isDev ? ` ⚡️ Dev` : ''}`,
   description: '__MSG_EXT_DESCRIPTION__' || packageData.description,
   version: packageData.version,
   manifest_version: 3,
   default_locale: 'en',
   icons: {
-    16: 'img/logo-16.png',
-    32: 'img/logo-34.png',
-    48: 'img/logo-48.png',
-    128: 'img/logo-128.png',
+    16: 'icons/16x16.png',
+    32: 'icons/32x32.png',
+    48: 'icons/48x48.png',
+    96: 'icons/96x96.png',
+    128: 'icons/128x128.png',
   },
   action: {
     default_popup: 'popup.html',
-    default_icon: 'img/logo-48.png',
+    default_icon: 'icons/48x48.png',
   },
   options_page: 'popup.html',
   content_scripts: [
@@ -28,7 +29,13 @@ export default defineManifest({
   ],
   web_accessible_resources: [
     {
-      resources: ['img/logo-16.png', 'img/logo-34.png', 'img/logo-48.png', 'img/logo-128.png'],
+      resources: [
+        'icons/16x16.png',
+        'icons/32x32.png',
+        'icons/48x48.png',
+        'icons/96x96.png',
+        'icons/128x128.png',
+      ],
       matches: [],
     },
   ],
