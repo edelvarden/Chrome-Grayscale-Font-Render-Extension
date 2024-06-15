@@ -5,7 +5,7 @@ export const LOCAL_CONFIG = chrome.storage.local
 // Utility functions
 export const tl = (message, args = []) => chrome.i18n.getMessage(message, args)
 const isErrorOccurred = () =>
-  chrome.runtime.lastError && console.log('❌ ERROR: ' + chrome.runtime.lastError.message)
+  chrome.runtime.lastError && console.error('❌ ERROR: ' + chrome.runtime.lastError.message)
 export const simpleErrorHandler = (message) => isErrorOccurred() && alert(message)
 export const $ = (selector, context = document) => context.querySelector(selector)
 export const $$ = (selector, context = document) => context.querySelectorAll(selector)
@@ -52,8 +52,7 @@ const addHashSuffix = (prefix) => `${prefix}__${generateHash(6)}`
 // Constants with unique class names
 const SANS_CLASS = addHashSuffix('sans')
 const MONOSPACE_CLASS = addHashSuffix('monospace')
-export const STYLE_TAG1_ID = addHashSuffix('style1')
-export const STYLE_TAG2_ID = addHashSuffix('style2')
+export const STYLE_TAG_ID = addHashSuffix('style')
 
 // Excluded tags for font replacement
 const EXCLUDED_TAGS = [
@@ -76,21 +75,18 @@ const EXCLUDED_TAGS = [
 
 // Cleanup styles
 export const cleanupStyles = () => {
-  cleanupStyleTag(STYLE_TAG1_ID)
-  cleanupStyleTag(STYLE_TAG2_ID)
+  cleanupStyleTag(STYLE_TAG_ID)
   document.documentElement.style.removeProperty('font-family')
   document.body.style.removeProperty('font-family')
 }
 
 const cleanupStyleTag = (id) => $(`#${id}`)?.remove()
 
-const createStyleTag = (id, content, position = 'before') => {
+const createStyleTag = (id, content) => {
   if (content) {
     cleanupStyleTag(id)
     const styleTag = $$$('style', { innerHTML: minifyCssString(content) }, { id, type: 'text/css' })
-    position === 'before'
-      ? document.documentElement.prepend(styleTag)
-      : document.documentElement.appendChild(styleTag)
+    document.documentElement.prepend(styleTag)
   }
 }
 
@@ -120,9 +116,8 @@ const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
   // const sansFallbackString = "sans-serif";
   // const monospaceFallbackString = "monospace";
   // const emojiFallbackString = "'Apple Color Emoji', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'";
-  if (isSansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)},sans-serif;`)
-  if (isMonospaceFont)
-    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)},monospace;`)
+  if (isSansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)};`)
+  if (isMonospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)};`)
   cssRules.push(`
     :root {
       ${rootCssVariables.join('')}
@@ -158,17 +153,11 @@ const getClassContent = (isSansFont, isMonospaceFont) => {
 
 // Font replacement functions
 const getFontFamily = (element) => getComputedStyle(element).fontFamily
-const replaceFont = (element, isMonospaceFont) => {
+const replaceFont = (element) => {
   const fontFamily = getFontFamily(element)
-  const styles = element.style['font-family']
-
-  // Check if the parent element is pre or code
-  const parentElement = element.parentElement;
-  const isMonospaceParent = parentElement && (parentElement.tagName === 'PRE' || parentElement.tagName === 'CODE');
-
   if (!fontFamily) return false
 
-  if (/monospace/.test(fontFamily) || isMonospaceParent) {
+  if (/monospace/.test(fontFamily)) {
     element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
     return true
   }
@@ -180,14 +169,12 @@ const replaceFont = (element, isMonospaceFont) => {
 }
 const replaceFonts = (elements) => elements.forEach(replaceFont)
 
-export const invokeReplacer = (parent = document) =>
-  replaceFonts(parent.querySelectorAll('textarea, span, li, a, div, button'))
+export const invokeReplacer = (parent = document) => replaceFonts(parent.querySelectorAll('*'))
 
 // Mutation observer
 export const invokeObserver = () => {
   const observerOptions = { childList: true, subtree: true }
   const observer = new MutationObserver(() => invokeReplacer(document))
-
   observer.observe(document, observerOptions)
 }
 
@@ -196,7 +183,7 @@ export const preview = () => {
   LOCAL_CONFIG.get({ off: false }, (a) => {
     if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD')) || a.off) return
 
-    CONFIG?.get({ 'font-default': '', 'font-mono': '' }, (settings) => {
+    CONFIG.get({ 'font-default': '', 'font-mono': '' }, (settings) => {
       if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))) return
       init(settings)
     })
@@ -214,8 +201,7 @@ export const init = (settings) => {
   const cssRules = getCssRules(isSansFont, isMonospaceFont, sansFont, monospaceFont)
   const classContent = getClassContent(isSansFont, isMonospaceFont)
 
-  createStyleTag(STYLE_TAG1_ID, cssRules.join(''), 'before')
-  createStyleTag(STYLE_TAG2_ID, classContent, 'after')
+  createStyleTag(STYLE_TAG_ID, cssRules.join('') + classContent)
 
   document.documentElement.style.setProperty(
     'font-family',
