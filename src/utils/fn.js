@@ -120,8 +120,9 @@ const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
   // const sansFallbackString = "sans-serif";
   // const monospaceFallbackString = "monospace";
   // const emojiFallbackString = "'Apple Color Emoji', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'";
-  if (isSansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)};`)
-  if (isMonospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)};`)
+  if (isSansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)},sans-serif;`)
+  if (isMonospaceFont)
+    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)},monospace;`)
   cssRules.push(`
     :root {
       ${rootCssVariables.join('')}
@@ -147,8 +148,8 @@ const getClassContent = (isSansFont, isMonospaceFont) => {
     : ''
   const codeStyleTagContent = isMonospaceFont
     ? `
-    code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
-    code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
+    pre, code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
+    pre *, code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
   `
     : ''
 
@@ -157,11 +158,17 @@ const getClassContent = (isSansFont, isMonospaceFont) => {
 
 // Font replacement functions
 const getFontFamily = (element) => getComputedStyle(element).fontFamily
-const replaceFont = (element) => {
+const replaceFont = (element, isMonospaceFont) => {
   const fontFamily = getFontFamily(element)
+  const styles = element.style['font-family']
+
+  // Check if the parent element is pre or code
+  const parentElement = element.parentElement;
+  const isMonospaceParent = parentElement && (parentElement.tagName === 'PRE' || parentElement.tagName === 'CODE');
+
   if (!fontFamily) return false
 
-  if (/monospace/.test(fontFamily)) {
+  if (/monospace/.test(fontFamily) || isMonospaceParent) {
     element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
     return true
   }
@@ -174,7 +181,7 @@ const replaceFont = (element) => {
 const replaceFonts = (elements) => elements.forEach(replaceFont)
 
 export const invokeReplacer = (parent = document) =>
-  replaceFonts(parent.querySelectorAll('pre, textarea, span, li, a, div, button'))
+  replaceFonts(parent.querySelectorAll('textarea, span, li, a, div, button'))
 
 // Mutation observer
 export const invokeObserver = () => {

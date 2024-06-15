@@ -4,6 +4,7 @@
 - https://fonts.google.com/icons
 - https://developer.mozilla.org/en-US/docs/Web/API/Document/createDocumentFragment
 - https://react.dev/learn
+- https://www.30secondsofcode.org/js/s/inject-css/
 */
 import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fn.js'
 
