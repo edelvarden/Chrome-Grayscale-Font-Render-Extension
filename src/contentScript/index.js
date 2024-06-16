@@ -14,6 +14,8 @@ window.addEventListener('DOMContentLoaded', () => {
   invokeReplacer()
 })
 
+preview()
+
 // Re-apply preview for dynamically loaded content
 document.addEventListener('DOMContentLoaded', preview)  // Initial page load
 window.addEventListener('load', preview)               // Complete page load
