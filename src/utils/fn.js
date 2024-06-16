@@ -7,6 +7,7 @@ export const tl = (message, args = []) => chrome.i18n.getMessage(message, args)
 
 const isErrorOccurred = () =>
   chrome.runtime.lastError && console.error('❌ ERROR: ' + chrome.runtime.lastError.message)
+
 export const simpleErrorHandler = (message) => {
   if (isErrorOccurred()) {
     alert(message)
@@ -177,10 +178,15 @@ const replaceFont = (element) => {
   return false
 }
 
-const replaceFonts = (elements) => elements.forEach(replaceFont)
+const replaceFonts = (elements) => {
+  elements.forEach((element) => {
+    requestAnimationFrame(() => replaceFont(element))
+  })
+}
 
 export const invokeReplacer = (parent = document) => {
-  requestAnimationFrame(() => replaceFonts(parent.querySelectorAll('*')))
+  const elements = parent.querySelectorAll('*')
+  replaceFonts(elements)
 }
 
 // Mutation observer
