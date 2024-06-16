@@ -171,22 +171,20 @@ const initSettings = (fontSettings, fontList) => {
   select_mono.value = fontSettings['font-mono']
 }
 
-// Main
 window.addEventListener(
   'load',
-  () => {
-    CONFIG?.get(
-      {
+  async () => {
+    try {
+      const fontSettings = await CONFIG?.get({
         'font-default': '',
         'font-mono': '',
-      },
-      (fontSettings) => {
-        simpleErrorHandler(tl('ERROR_SETTINGS_LOAD')) ||
-          chrome.fontSettings.getFontList((fontList) => {
-            initSettings(fontSettings, fontList)
-          })
-      },
-    )
+      })
+      const fontList = await chrome.fontSettings.getFontList()
+
+      initSettings(fontSettings, fontList)
+    } catch (error) {
+      simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'), error)
+    }
   },
   false,
 )
