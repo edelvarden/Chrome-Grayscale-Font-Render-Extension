@@ -5,7 +5,7 @@ import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '@utils/fn'
 import '../localize'
 import './index.css'
 
-let btn_switch, btn_reset, select_default, select_fixed
+let btn_switch, btn_reset, select_default, select_mono
 
 let on = true
 
@@ -33,7 +33,7 @@ const reset = () => {
     removeEffect()
 
     select_default.value = ''
-    select_fixed.value = ''
+    select_mono.value = ''
 
     if (on === false) {
       handleSwitch()
@@ -46,7 +46,7 @@ const reset = () => {
 const saveSettings = () => {
   const settings = {
     'font-default': select_default.value.trim(),
-    'font-mono': select_fixed.value.trim(),
+    'font-mono': select_mono.value.trim(),
   }
   save(settings)
 }
@@ -91,7 +91,7 @@ const bindEvents = () => {
   btn_switch.addEventListener('click', handleSwitch, false)
   btn_reset.addEventListener('click', reset, false)
   select_default.addEventListener('change', saveSettings, false)
-  select_fixed.addEventListener('change', saveSettings, false)
+  select_mono.addEventListener('change', saveSettings, false)
 }
 
 const googleFontsList = [
@@ -128,7 +128,7 @@ const initSettings = (fontSettings, fontList) => {
   btn_switch = $('#switch')
   btn_reset = $('#reset')
   select_default = $('#font-default')
-  select_fixed = $('#font-mono')
+  select_mono = $('#font-mono')
 
   bindEvents()
   initSwitchState()
@@ -148,6 +148,7 @@ const initSettings = (fontSettings, fontList) => {
 
   // sort font list alphabetically
   fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
+
   const defaultOption = $$$('option', { innerText: tl('SETTINGS_FONT_DEFAULT') }, { value: '' })
 
   const createOption = (font) => {
@@ -158,7 +159,7 @@ const initSettings = (fontSettings, fontList) => {
   }
 
   // Append default option and font options to select elements
-  ;[select_default, select_fixed].forEach((select) => {
+  ;[select_default, select_mono].forEach((select) => {
     select.innerHTML = '' // Clear select options before appending
     select.appendChild(defaultOption.cloneNode(true))
     fontList.forEach((font) => {
@@ -167,7 +168,7 @@ const initSettings = (fontSettings, fontList) => {
   })
 
   select_default.value = fontSettings['font-default']
-  select_fixed.value = fontSettings['font-mono']
+  select_mono.value = fontSettings['font-mono']
 }
 
 // Main
