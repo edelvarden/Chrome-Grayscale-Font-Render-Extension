@@ -1,8 +1,8 @@
 import '@material/web/elevation/elevation'
 import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/switch/switch'
-import '../localize'
 import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '@utils/fn'
+import '../localize'
 import './index.css'
 
 let btn_switch, btn_reset, select_default, select_fixed
@@ -94,6 +94,35 @@ const bindEvents = () => {
   select_fixed.addEventListener('change', saveSettings, false)
 }
 
+const googleFontsList = [
+  // sans-serif
+  { fontFamily: 'Roboto', displayName: 'Roboto', fontStyle: 'sans-serif' },
+  { fontFamily: 'Open Sans', displayName: 'Open Sans', fontStyle: 'sans-serif' },
+  { fontFamily: 'Montserrat', displayName: 'Montserrat', fontStyle: 'sans-serif' },
+  { fontFamily: 'Poppins', displayName: 'Poppins', fontStyle: 'sans-serif' },
+  { fontFamily: 'Lato', displayName: 'Lato', fontStyle: 'sans-serif' },
+  { fontFamily: 'Inter', displayName: 'Inter', fontStyle: 'sans-serif' },
+  { fontFamily: 'Ubuntu', displayName: 'Ubuntu', fontStyle: 'sans-serif' },
+  { fontFamily: 'Ubuntu Sans', displayName: 'Ubuntu Sans', fontStyle: 'sans-serif' },
+  { fontFamily: 'Noto Sans', displayName: 'Noto Sans', fontStyle: 'sans-serif' },
+  // serif
+  { fontFamily: 'Merriweather', displayName: 'Merriweather', fontStyle: 'serif' },
+  { fontFamily: 'Lora', displayName: 'Lora', fontStyle: 'serif' },
+  // monospace
+  { fontFamily: 'Roboto Mono', displayName: 'Roboto Mono', fontStyle: 'monospace' },
+  { fontFamily: 'Noto Sans Mono', displayName: 'Noto Sans Mono', fontStyle: 'monospace' },
+  { fontFamily: 'JetBrains Mono', displayName: 'JetBrains Mono', fontStyle: 'monospace' },
+  { fontFamily: 'Inconsolata', displayName: 'Inconsolata', fontStyle: 'monospace' },
+  { fontFamily: 'Fira Code', displayName: 'Fira Code', fontStyle: 'monospace' },
+  { fontFamily: 'Source Code Pro', displayName: 'Source Code Pro', fontStyle: 'monospace' },
+  { fontFamily: 'Anonymous Pro', displayName: 'Anonymous Pro', fontStyle: 'monospace' },
+  { fontFamily: 'Ubuntu Sans Mono', displayName: 'Ubuntu Sans Mono', fontStyle: 'monospace' },
+  { fontFamily: 'Ubuntu Mono', displayName: 'Ubuntu Mono', fontStyle: 'monospace' },
+  // cursive
+  { fontFamily: 'Playwrite US Trad', displayName: 'Playwrite USA Traditional', fontStyle: 'cursive' },
+  { fontFamily: 'Playwrite FR Moderne', displayName: 'Playwrite France Moderne', fontStyle: 'cursive' },
+]
+
 // Initialization
 const initSettings = (fontSettings, fontList) => {
   btn_switch = $('#switch')
@@ -109,6 +138,14 @@ const initSettings = (fontSettings, fontList) => {
       ((btn_switch.selected = !config.off), (on = !config.off))
   })
 
+  // Add Google fonts to fontList if they do not already exist
+  googleFontsList.forEach((googleFont) => {
+    if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
+      const fontId = 'GF-' + googleFont.fontFamily // Prefix 'GF-'
+      fontList.push({ displayName: googleFont.displayName, fontId })
+    }
+  })
+
   // sort font list alphabetically
   fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
   const defaultOption = $$$('option', { innerText: tl('SETTINGS_FONT_DEFAULT') }, { value: '' })
@@ -120,9 +157,13 @@ const initSettings = (fontSettings, fontList) => {
     return option
   }
 
+  // Append default option and font options to select elements
   ;[select_default, select_fixed].forEach((select) => {
+    select.innerHTML = '' // Clear select options before appending
     select.appendChild(defaultOption.cloneNode(true))
-    fontList.forEach((font) => select.appendChild(createOption(font)))
+    fontList.forEach((font) => {
+      select.appendChild(createOption(font))
+    })
   })
 
   select_default.value = fontSettings['font-default']

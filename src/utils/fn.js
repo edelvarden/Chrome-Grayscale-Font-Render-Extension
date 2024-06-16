@@ -100,10 +100,21 @@ const createStyleTag = (id, content) => {
 }
 
 // CSS rules generation
-const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
+const getCssRules = (fonts) => {
+  let sansFont = fonts[0].fontFamily
+  let monospaceFont = fonts[1].fontFamily
   const cssRules = []
+  const importFonts = []
 
-  if (isSansFont) {
+  let isSansGoogleFont = false
+  let isMonoGoogleFont = false
+  const isGoogleFont = (fontId) => fontId.startsWith('GF-')
+
+  if (isGoogleFont(sansFont)) {
+    sansFont = sansFont.replace('GF-', '')
+    isSansGoogleFont = true
+    importFonts.push(`family=${sansFont.split(' ').join('+')}:wght@400;500;600;700`)
+  } else if (sansFont) {
     const normalizedDefaultFont = fixName(sansFont)
     cssRules.push(`
       @font-face {
@@ -121,20 +132,53 @@ const getCssRules = (isSansFont, isMonospaceFont, sansFont, monospaceFont) => {
     `)
   }
 
+  if (isGoogleFont(monospaceFont)) {
+    monospaceFont = monospaceFont.replace('GF-', '')
+    isMonoGoogleFont = true
+
+    // prevent duplicated import
+    if (sansFont !== monospaceFont) {
+      importFonts.push(`family=${monospaceFont.split(' ').join('+')}:wght@400;500;600;700`)
+    }
+  } else if (monospaceFont) {
+    const normalizedMonospaceFont = fixName(monospaceFont)
+    cssRules.push(`
+      @font-face {
+        font-style: normal;
+        font-family: ${normalizedMonospaceFont};
+        src: local(${normalizedMonospaceFont});
+        display: swap;
+      }
+      @font-face {
+        font-style: bolder;
+        font-family: ${normalizedMonospaceFont};
+        src: local(${normalizedMonospaceFont});
+        display: swap;
+      }
+    `)
+  }
+
+  if (isSansGoogleFont || isMonoGoogleFont) {
+    cssRules.unshift(
+      `@import url('https://fonts.googleapis.com/css2?${importFonts.join('&')}&display=swap');`,
+    )
+  }
+
   const rootCssVariables = []
   // const sansFallbackString = "sans-serif";
   // const monospaceFallbackString = "monospace";
   // const emojiFallbackString = "'Apple Color Emoji', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'";
-  if (isSansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)};`)
-  if (isMonospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)};`)
+  if (sansFont) rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont)};`)
+  if (monospaceFont) rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont)};`)
+
   cssRules.push(`
     :root {
       ${rootCssVariables.join('')}
-      font-synthesis: weight;
+      font-synthesis: none;
     }
   `)
 
-  if (isSansFont) {
+  if (sansFont) {
     cssRules.push(`
       :not(${EXCLUDED_TAGS.join(',')}) {
         font-family: var(--${SANS_CLASS}) !important;
@@ -211,12 +255,13 @@ export const preview = () => {
 // Main initialization function
 export const init = (settings) => {
   const { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
+
   const isSansFont = sansFont && sansFont.length > 0
   const isMonospaceFont = monospaceFont && monospaceFont.length > 0
 
   if (!isSansFont && !isMonospaceFont) return cleanupStyles()
 
-  const cssRules = getCssRules(isSansFont, isMonospaceFont, sansFont, monospaceFont)
+  const cssRules = getCssRules([{ fontFamily: sansFont }, { fontFamily: monospaceFont }])
   const classContent = getClassContent(isSansFont, isMonospaceFont)
 
   createStyleTag(STYLE_TAG_ID, cssRules.join('') + classContent)
