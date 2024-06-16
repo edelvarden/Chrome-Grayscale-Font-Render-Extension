@@ -8,51 +8,48 @@
   </head>
   <body>
     <main>
-
       <div class="surface">
         <md-elevation></md-elevation>
-      <div id="settings" class="settings-container">
-        
-
-        <!-- Default/Fixed Fonts selection -->
-        <section class="setting-inner">
-          <!-- Custom Fonts -->
-          <div class="settings__item">
-            <h2 class="title" i18n="SETTINGS_TITLE_FONTS"></h2>
-
-            <div style="display: flex; flex-direction: row; align-items: center; gap: 1rem;">
-              <!-- Reset settings button -->
-            <md-filled-tonal-icon-button id="reset" aria-label="reset-settings">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z"/></svg>
-            </md-filled-tonal-icon-button>
-
-            <!-- Enable/Disable button -->
-            <label>
-              <md-switch id="switch" selected></md-switch>
-            </label>
+        <div id="settings" class="settings-container">
+          <!-- Default/Fixed Fonts selection -->
+          <section class="setting-inner">
+            <!-- Custom Fonts -->
+            <div class="settings__item">
+              <h2 class="title" i18n="SETTINGS_TITLE_FONTS"></h2>
+              <div style="display: flex; flex-direction: row; align-items: center; gap: 1rem;">
+                <!-- Reset settings button -->
+                <md-filled-tonal-icon-button id="reset" aria-label="reset-settings">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                    <path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z"/>
+                  </svg>
+                </md-filled-tonal-icon-button>
+                <!-- Enable/Disable button -->
+                <label>
+                  <md-switch id="switch" selected></md-switch>
+                </label>
+              </div>
             </div>
+            <div class="settings__item">
+              <div class="select-label">
+                <span class="select-label__title" i18n="FONT_DEFAULT"></span>
+                <span class="select-label__description" i18n="FONT_DEFAULT_DESCRIPTION"></span>
+              </div>
+              <div>
+                <select id="font-default" class="select"></select>
+              </div>
             </div>
-          </div>
-          <div class="settings__item">
-            <div class="select-label">
-              <span class="select-label__title" i18n="FONT_DEFAULT"></span>
-              <!-- <span class="important-mark">*</span> -->
-              <span class="select-label__description" i18n="FONT_DEFAULT_DESCRIPTION"></span>
+            <div class="settings__item">
+              <div class="select-label">
+                <span class="select-label__title" i18n="FONT_MONOSPACE"></span>
+                <span class="select-label__description" i18n="FONT_MONOSPACE_DESCRIPTION"></span>
+              </div>
+              <div>
+                <select id="font-mono" class="select"></select>
+              </div>
             </div>
-            <div>
-              <select id="font-default" class="select"></select>
-            </div>
-          </div>
-          <div class="settings__item">
-            <div class="select-label">
-              <span class="select-label__title" i18n="FONT_MONOSPACE"></span>
-              <span class="select-label__description" i18n="FONT_MONOSPACE_DESCRIPTION"></span>
-            </div>
-            <div><select id="font-mono" class="select"></select></div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
-    </div>
     </main>
     <script type="module" src="/src/popup/index.js"></script>
   </body>
