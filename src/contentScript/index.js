@@ -14,8 +14,14 @@ window.addEventListener('DOMContentLoaded', () => {
   invokeReplacer()
 })
 
-preview()
-// ----------------------------------------------------------------
+// Re-apply preview for dynamically loaded content
+document.addEventListener('DOMContentLoaded', preview)  // Initial page load
+window.addEventListener('load', preview)               // Complete page load
+
+// Listen for navigation events if using React Router or similar SPA framework
+window.addEventListener('popstate', preview)           // For history API
+window.addEventListener('pushState', preview)          // Custom events for SPA navigation
+window.addEventListener('replaceState', preview)       // Custom events for SPA navigation
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -26,8 +32,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'executeCleanup':
       cleanupStyles()
       break
-
     default:
+      console.error('❌ Unknown action:', message.action)
       break
+  }
+})
+
+// Listen for storage changes
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
+    preview()
   }
 })

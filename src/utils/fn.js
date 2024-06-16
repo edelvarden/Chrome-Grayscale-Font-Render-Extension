@@ -4,9 +4,17 @@ export const LOCAL_CONFIG = chrome.storage.local
 
 // Utility functions
 export const tl = (message, args = []) => chrome.i18n.getMessage(message, args)
+
 const isErrorOccurred = () =>
   chrome.runtime.lastError && console.error('❌ ERROR: ' + chrome.runtime.lastError.message)
-export const simpleErrorHandler = (message) => isErrorOccurred() && alert(message)
+export const simpleErrorHandler = (message) => {
+  if (isErrorOccurred()) {
+    alert(message)
+    return true
+  }
+  return false
+}
+
 export const $ = (selector, context = document) => context.querySelector(selector)
 export const $$ = (selector, context = document) => context.querySelectorAll(selector)
 
@@ -153,6 +161,7 @@ const getClassContent = (isSansFont, isMonospaceFont) => {
 
 // Font replacement functions
 const getFontFamily = (element) => getComputedStyle(element).fontFamily
+
 const replaceFont = (element) => {
   const fontFamily = getFontFamily(element)
   if (!fontFamily) return false
@@ -167,9 +176,12 @@ const replaceFont = (element) => {
   }
   return false
 }
+
 const replaceFonts = (elements) => elements.forEach(replaceFont)
 
-export const invokeReplacer = (parent = document) => replaceFonts(parent.querySelectorAll('*'))
+export const invokeReplacer = (parent = document) => {
+  requestAnimationFrame(() => replaceFonts(parent.querySelectorAll('*')))
+}
 
 // Mutation observer
 export const invokeObserver = () => {
