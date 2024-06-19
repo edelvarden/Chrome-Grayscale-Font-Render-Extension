@@ -79,16 +79,12 @@ const cleanupStyleTag = (id) => $(`#${id}`)?.remove()
 let cachedStyleTag
 
 const createStyleTag = (id, content) => {
-  if (!content) return
-
-  if (!cachedStyleTag || cachedStyleTag.id !== id) {
-    cachedStyleTag = document.createElement('style')
-    cachedStyleTag.id = id
-    cachedStyleTag.type = 'text/css'
-    document.head.prepend(cachedStyleTag)
+  if (content) {
+    cleanupStyleTag(id)
+    const styleTag = $$$('style', { innerHTML: content }, { id, type: 'text/css' })
+    // document.documentElement.prepend(styleTag)
+    document.head.prepend(styleTag)
   }
-
-  cachedStyleTag.textContent = content
 }
 
 // Helper function to generate font face rule for each weight
@@ -108,44 +104,45 @@ const getFontFace = (fontFamily, weights) => {
     .join('')
 }
 
-// CSS rules generation
 const getCssRules = (fontObject) => {
-  const [sansFont, monospaceFont] = fontObject
-  const cssRules = []
-  const importFonts = []
+  const [sansFont, monospaceFont] = fontObject;
+  const cssRules = [];
+  const importFonts = [];
 
   const handleFont = (font, isMonospace = false) => {
-    const weights = isMonospace ? [400, 700] : [400, 700]
+    const weights = isMonospace ? [400, 700] : [400, 700];
     if (font.isGoogleFont) {
-      importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
+      importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`);
     } else if (font.fontFamily) {
       cssRules.push(getFontFace(font.fontFamily, weights))
     }
-  }
+  };
 
-  handleFont(sansFont)
+  handleFont(sansFont);
   if (sansFont.fontFamily !== monospaceFont.fontFamily) {
-    handleFont(monospaceFont, true)
+    handleFont(monospaceFont, true);
   }
 
   if (importFonts.length > 0) {
+
     cssRules.unshift(
       `@import url('https://fonts.googleapis.com/css2?${importFonts.join('&')}&display=swap');`,
     )
   }
 
-  const rootCssVariables = []
+  const rootCssVariables = [];
   if (sansFont.fontFamily) {
-    rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`)
+    rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`);
   }
 
   if (monospaceFont.fontFamily) {
-    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)};`)
+    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)};`);
   }
 
-  cssRules.push(`:root {${rootCssVariables.join('')}}`)
-  return cssRules.join('')
-}
+  cssRules.push(`:root {${rootCssVariables.join('')}}`);
+
+  return cssRules.join('');
+};
 
 const getClassContent = () => {
   let classContent = `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
