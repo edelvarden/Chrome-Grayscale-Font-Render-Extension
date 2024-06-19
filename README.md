@@ -28,4 +28,4 @@ If you switch to disabled this is disable font replacement only for current tab.
 
 | Before                                   | After                                   |
 | ---------------------------------------- | --------------------------------------- |
-| ![alt text](screenshots/font-before.png) | ![alt text](screenshots/font-after.png) |
+| ![alt text](docs/screenshots/font-before.png) | ![alt text](docs/screenshots/font-after.png) |

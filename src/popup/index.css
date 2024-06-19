@@ -2,6 +2,11 @@
 @import './theme.css';
 @import './controls/select.css';
 
+:root {
+  --sans-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
+  --serif-font: 'Georgia', 'Times New Roman', 'Times', serif, 'Apple Color Emoji', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
+}
+
 html {
   /* background: #202124; */
   background: var(--md-sys-color-background);
@@ -12,7 +17,7 @@ body {
   min-width: 420px;
   max-width: 700px;
   margin: 0 auto;
-  font: 1.1rem sans-serif;
+  font: 1.1rem var(--sans-font);
   overflow-x: hidden;
   padding-left: 20px;
   padding-right: 20px;
@@ -47,7 +52,7 @@ body {
   outline: 0;
   padding-bottom: 4px;
   padding-top: 8px;
-  font-family: 'Georgia', 'Times New Roman', 'Times', serif;
+  font-family: var(--serif-font);
 }
 
 .setting-inner {

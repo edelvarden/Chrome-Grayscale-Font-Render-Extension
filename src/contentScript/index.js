@@ -5,6 +5,7 @@
 - https://developer.mozilla.org/en-US/docs/Web/API/Document/createDocumentFragment
 - https://react.dev/learn
 - https://www.30secondsofcode.org/js/s/inject-css/
+- https://material.io/blog/migrating-material-3
 */
 import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fn.js'
 

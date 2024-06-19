@@ -10,10 +10,7 @@ export default defineManifest({
   manifest_version: 3,
   default_locale: 'en',
   icons: {
-    16: 'icons/16x16.png',
-    32: 'icons/32x32.png',
     48: 'icons/48x48.png',
-    96: 'icons/96x96.png',
     128: 'icons/128x128.png',
   },
   action: {

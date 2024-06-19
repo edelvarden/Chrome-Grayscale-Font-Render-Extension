@@ -88,7 +88,7 @@ const handleSwitch = () => {
 
 // Event Binding
 const bindEvents = () => {
-  btn_switch.addEventListener('click', handleSwitch, false)
+  btn_switch.addEventListener('input', handleSwitch, false)
   btn_reset.addEventListener('click', reset, false)
   select_default.addEventListener('change', saveSettings, false)
   select_mono.addEventListener('change', saveSettings, false)

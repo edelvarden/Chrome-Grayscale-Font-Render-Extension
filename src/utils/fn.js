@@ -99,6 +99,10 @@ const createStyleTag = (id, content) => {
   }
 }
 
+const getFontFace = (fontFaceObj) => {
+  return `@font-face {font-family: ${fontFaceObj.fontFamily};src: local(${fontFaceObj.fontFamily});font-weight: ${fontFaceObj.fontWeight};display: swap;}`
+}
+
 // CSS rules generation
 const getCssRules = (fontObject) => {
   let sansFont = fontObject[0]
@@ -106,32 +110,28 @@ const getCssRules = (fontObject) => {
   const cssRules = []
   const importFonts = []
 
-  const handleFont = (font) => {
+  const handleFont = (font, isMonospace = false) => {
     if (font.isGoogleFont) {
-      importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@400;500;600;700`)
+      if(isMonospace){
+        importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@400;700`)
+      }else {
+        importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@400;500;600;700`)
+      }
     } else if (font.fontFamily) {
       const normalizedFont = fixName(font.fontFamily)
-      cssRules.push(`
-        @font-face {
-          font-style: normal;
-          font-family: ${normalizedFont};
-          src: local(${normalizedFont});
-          display: swap;
-        }
-        @font-face {
-          font-style: bolder;
-          font-family: ${normalizedFont};
-          src: local(${normalizedFont});
-          display: swap;
-        }
-      `)
+      if(!isMonospace){
+        cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 500}))
+        cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 600}))
+      }
+      cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 400}))
+      cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 700}))
     }
   }
 
   handleFont(sansFont)
   // Check for duplicate font before adding monospaceFont
   if (sansFont.fontFamily !== monospaceFont.fontFamily) {
-    handleFont(monospaceFont)
+    handleFont(monospaceFont, true)
   }
 
   if (importFonts.length > 0) {
@@ -141,15 +141,17 @@ const getCssRules = (fontObject) => {
   }
 
   const rootCssVariables = []
-  if (sansFont.fontFamily)
+  if (sansFont.fontFamily){
     rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`)
-  if (monospaceFont.fontFamily)
+  }
+    
+  if (monospaceFont.fontFamily) {
     rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)};`)
+  }
 
   cssRules.push(`
     :root {
       ${rootCssVariables.join('')}
-      font-synthesis: none;
     }
   `)
 
@@ -180,11 +182,21 @@ const getClassContent = (fontObject) => {
 }
 
 // Font replacement functions
-const getFontFamily = (element) => getComputedStyle(element).fontFamily
+const getFontFamily = (element) => {
+  try {
+    return getComputedStyle(element).fontFamily
+  } catch (error) {
+    console.error('❌ Error getting font family:', error);
+  }
+
+  return ''
+}
 
 const replaceFont = (element) => {
-  const fontFamily = getFontFamily(element)
-  if (!fontFamily) return false
+  const fontFamily = getFontFamily(element) ?? ''
+  if (!fontFamily || fontFamily.length <= 1 || fontFamily.toLocaleLowerCase().includes('icon')) {
+    return false
+  }
 
   if (/monospace/.test(fontFamily)) {
     element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
@@ -229,10 +241,15 @@ export const preview = () => {
 
 // Main initialization function
 export const init = (settings) => {
-  const { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
+  let { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
 
   const isSansFont = sansFont && sansFont.length > 0
-  const isMonospaceFont = monospaceFont && monospaceFont.length > 0
+  let isMonospaceFont = monospaceFont && monospaceFont.length > 0
+
+  if(!monospaceFont) {
+    monospaceFont = "monospace"
+    isMonospaceFont = true
+  }
 
   if (!isSansFont && !isMonospaceFont) return cleanupStyles()
 
