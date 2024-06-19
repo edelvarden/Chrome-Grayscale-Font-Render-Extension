@@ -6,7 +6,7 @@ export const LOCAL_CONFIG = chrome.storage.local
 export const tl = (message, args = []) => chrome.i18n.getMessage(message, args)
 
 const isErrorOccurred = () =>
-  chrome.runtime.lastError && console.error('❌ ERROR: ' + chrome.runtime.lastError.message)
+  chrome.runtime.lastError && console.error('❌ ERROR:', chrome.runtime.lastError.message)
 
 export const simpleErrorHandler = (message) => {
   if (isErrorOccurred()) {
@@ -21,8 +21,7 @@ export const $$ = (selector, context = document) => context.querySelectorAll(sel
 
 // Element creation function
 export const $$$ = (tag, attributes = {}, customAttributes = {}, css = {}) => {
-  const element = document.createElement(tag)
-  Object.assign(element, attributes)
+  const element = Object.assign(document.createElement(tag), attributes)
   Object.entries(customAttributes).forEach(([key, value]) => element.setAttribute(key, value))
   Object.assign(element.style, css)
   return element
@@ -47,8 +46,9 @@ const minifyCssString = (cssString) =>
 
 // Hash generation
 const generateHash = (length) => {
-  if (!Number.isInteger(length) || length <= 0)
-    throw new Error('❌ Invalid length for hash generation:', length)
+  if (!Number.isInteger(length) || length <= 0) {
+    throw new Error(`❌ Invalid length for hash generation: ${length}`)
+  }
   const randomSymbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   return Array.from(
     { length },
@@ -72,6 +72,9 @@ const EXCLUDED_TAGS = [
 
   // Monospace
   'pre', // (optional) can be not monospaced
+  'pre *',
+  'code',
+  'code *',
   'textarea', // (optional) can be not monospaced
 
   // Additional exclusion (for observer scanning)
@@ -99,37 +102,35 @@ const createStyleTag = (id, content) => {
   }
 }
 
+// Helper function to generate font face rule for each weight
 const getFontFace = (fontFaceObj) => {
-  return `@font-face {font-family: ${fontFaceObj.fontFamily};src: local(${fontFaceObj.fontFamily});font-weight: ${fontFaceObj.fontWeight};display: swap;}`
+  const { fontFamily, fontWeights } = fontFaceObj
+  return fontWeights
+    .map(
+      (weight) =>
+        `@font-face {font-family: ${fontFamily}; src: local(${fontFamily}); font-weight: ${weight}; display: swap;}`,
+    )
+    .join('')
 }
 
 // CSS rules generation
 const getCssRules = (fontObject) => {
-  let sansFont = fontObject[0]
-  let monospaceFont = fontObject[1]
+  const [sansFont, monospaceFont] = fontObject
   const cssRules = []
   const importFonts = []
 
   const handleFont = (font, isMonospace = false) => {
+    const weights = isMonospace ? [400, 700] : [400, 500, 600, 700]
+
     if (font.isGoogleFont) {
-      if(isMonospace){
-        importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@400;700`)
-      }else {
-        importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@400;500;600;700`)
-      }
+      importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     } else if (font.fontFamily) {
       const normalizedFont = fixName(font.fontFamily)
-      if(!isMonospace){
-        cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 500}))
-        cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 600}))
-      }
-      cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 400}))
-      cssRules.push(getFontFace({fontFamily: normalizedFont, fontWeight: 700}))
+      cssRules.push(getFontFace({ fontFamily: normalizedFont, fontWeights: weights }))
     }
   }
 
   handleFont(sansFont)
-  // Check for duplicate font before adding monospaceFont
   if (sansFont.fontFamily !== monospaceFont.fontFamily) {
     handleFont(monospaceFont, true)
   }
@@ -141,44 +142,37 @@ const getCssRules = (fontObject) => {
   }
 
   const rootCssVariables = []
-  if (sansFont.fontFamily){
+  if (sansFont.fontFamily) {
     rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`)
   }
-    
+
   if (monospaceFont.fontFamily) {
     rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)};`)
   }
 
-  cssRules.push(`
-    :root {
-      ${rootCssVariables.join('')}
-    }
-  `)
+  cssRules.push(`:root {${rootCssVariables.join('')}}`)
 
   if (sansFont.fontFamily) {
-    cssRules.push(`
-      :not(${EXCLUDED_TAGS.join(',')}) {
-        font-family: var(--${SANS_CLASS}) !important;
-      }
-    `)
+    cssRules.push(
+      `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`,
+    )
   }
 
   return cssRules
 }
 
 const getClassContent = (fontObject) => {
-  const styleTagContent = 'input,button{font-family:inherit;}'
-  const sansStyleTagContent = fontObject.sansFont
-    ? `:root,html,body{font-family:var(--${SANS_CLASS})!important;}`
-    : ''
-  const codeStyleTagContent = fontObject.monospaceFont
-    ? `
-    pre, code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
-    pre *, code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
-  `
-    : ''
-
-  return styleTagContent + sansStyleTagContent + codeStyleTagContent
+  let classContent = 'input,button{font-family:inherit;}'
+  if (fontObject.sansFont) {
+    classContent += `:root,html,body{font-family:var(--${SANS_CLASS})!important;}`
+  }
+  if (fontObject.monospaceFont) {
+    classContent += `
+      pre, code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
+      pre *, code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
+    `
+  }
+  return classContent
 }
 
 // Font replacement functions
@@ -186,15 +180,14 @@ const getFontFamily = (element) => {
   try {
     return getComputedStyle(element).fontFamily
   } catch (error) {
-    console.error('❌ Error getting font family:', error);
+    console.error('❌ Error getting font family:', error)
+    return ''
   }
-
-  return ''
 }
 
 const replaceFont = (element) => {
-  const fontFamily = getFontFamily(element) ?? ''
-  if (!fontFamily || fontFamily.length <= 1 || fontFamily.toLocaleLowerCase().includes('icon')) {
+  const fontFamily = getFontFamily(element)
+  if (!fontFamily || fontFamily.length <= 1 || fontFamily.toLowerCase().includes('icon')) {
     return false
   }
 
