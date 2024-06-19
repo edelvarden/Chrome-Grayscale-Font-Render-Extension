@@ -21,7 +21,8 @@ export const $$ = (selector, context = document) => context.querySelectorAll(sel
 
 // Element creation function
 export const $$$ = (tag, attributes = {}, customAttributes = {}, css = {}) => {
-  const element = Object.assign(document.createElement(tag), attributes)
+  const element = document.createElement(tag)
+  Object.assign(element, attributes)
   Object.entries(customAttributes).forEach(([key, value]) => element.setAttribute(key, value))
   Object.assign(element.style, css)
   return element
@@ -32,17 +33,6 @@ const fixName = (name) =>
   /^(?:serif|sans-serif|cursive|fantasy|monospace)$/.test(name.replace(/['"]/g, ''))
     ? name
     : `"${name.replace(/['"]/g, '')}"`
-
-// CSS string minification
-const minifyCssString = (cssString) =>
-  cssString
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\s+/g, ' ')
-    .replace(/\s*(:|;|\{|\})\s*/g, '$1')
-    .replace(/, /g, ',')
-    .replace(/ \( /g, '(')
-    .replace(/ \) /g, ')')
-    .trim()
 
 // Hash generation
 const generateHash = (length) => {
@@ -65,19 +55,11 @@ export const STYLE_TAG_ID = addHashSuffix('style')
 
 // Excluded tags for font replacement
 const EXCLUDED_TAGS = [
-  // Iconic font selectors
   'i',
   'mat-icon',
   'gf-load-icon-font',
 
-  // Monospace
-  'pre', // (optional) can be not monospaced
-  'pre *',
-  'code',
-  'code *',
-  'textarea', // (optional) can be not monospaced
-
-  // Additional exclusion (for observer scanning)
+  'textarea',
   'span',
   'div',
   'button',
@@ -94,21 +76,34 @@ export const cleanupStyles = () => {
 
 const cleanupStyleTag = (id) => $(`#${id}`)?.remove()
 
+let cachedStyleTag
+
 const createStyleTag = (id, content) => {
-  if (content) {
-    cleanupStyleTag(id)
-    const styleTag = $$$('style', { innerHTML: minifyCssString(content) }, { id, type: 'text/css' })
-    document.documentElement.prepend(styleTag)
+  if (!content) return
+
+  if (!cachedStyleTag || cachedStyleTag.id !== id) {
+    cachedStyleTag = document.createElement('style')
+    cachedStyleTag.id = id
+    cachedStyleTag.type = 'text/css'
+    document.head.prepend(cachedStyleTag)
   }
+
+  cachedStyleTag.textContent = content
 }
 
 // Helper function to generate font face rule for each weight
-const getFontFace = (fontFaceObj) => {
-  const { fontFamily, fontWeights } = fontFaceObj
-  return fontWeights
+const getFontFace = (fontFamily, weights) => {
+  const normalizedFont = fixName(fontFamily)
+  return weights
     .map(
-      (weight) =>
-        `@font-face {font-family: ${fontFamily}; src: local(${fontFamily}); font-weight: ${weight}; display: swap;}`,
+      (weight) => `
+    @font-face {
+      font-family: ${normalizedFont};
+      src: local(${normalizedFont});
+      font-weight: ${weight};
+      font-display: swap;
+    }
+  `,
     )
     .join('')
 }
@@ -120,13 +115,11 @@ const getCssRules = (fontObject) => {
   const importFonts = []
 
   const handleFont = (font, isMonospace = false) => {
-    const weights = isMonospace ? [400, 700] : [400, 500, 600, 700]
-
+    const weights = isMonospace ? [400, 700] : [400, 700]
     if (font.isGoogleFont) {
       importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     } else if (font.fontFamily) {
-      const normalizedFont = fixName(font.fontFamily)
-      cssRules.push(getFontFace({ fontFamily: normalizedFont, fontWeights: weights }))
+      cssRules.push(getFontFace(font.fontFamily, weights))
     }
   }
 
@@ -151,27 +144,19 @@ const getCssRules = (fontObject) => {
   }
 
   cssRules.push(`:root {${rootCssVariables.join('')}}`)
-
-  if (sansFont.fontFamily) {
-    cssRules.push(
-      `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`,
-    )
-  }
-
-  return cssRules
+  return cssRules.join('')
 }
 
-const getClassContent = (fontObject) => {
-  let classContent = 'input,button{font-family:inherit;}'
-  if (fontObject.sansFont) {
-    classContent += `:root,html,body{font-family:var(--${SANS_CLASS})!important;}`
-  }
-  if (fontObject.monospaceFont) {
-    classContent += `
-      pre, code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
-      pre *, code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
-    `
-  }
+const getClassContent = () => {
+  let classContent = `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
+
+  classContent += `html{font-family: var(--${SANS_CLASS})!important;}`
+  classContent += `body{font-family: var(--${SANS_CLASS})!important;}`
+  classContent += `
+  pre, code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
+  pre *, code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
+`
+
   return classContent
 }
 
@@ -203,9 +188,7 @@ const replaceFont = (element) => {
 }
 
 const replaceFonts = (elements) => {
-  elements.forEach((element) => {
-    requestAnimationFrame(() => replaceFont(element))
-  })
+  elements.forEach((element) => replaceFont(element))
 }
 
 export const invokeReplacer = (parent = document) => {
@@ -213,34 +196,36 @@ export const invokeReplacer = (parent = document) => {
   replaceFonts(elements)
 }
 
-// Mutation observer
 export const invokeObserver = () => {
   const observerOptions = { childList: true, subtree: true }
   const observer = new MutationObserver(() => invokeReplacer(document))
   observer.observe(document, observerOptions)
 }
 
-// Preview function
-export const preview = () => {
-  LOCAL_CONFIG.get({ off: false }, (a) => {
-    if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD')) || a.off) return
+export const preview = async () => {
+  try {
+    const { off } = await new Promise((resolve) => LOCAL_CONFIG.get({ off: false }, resolve))
+    if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD')) || off) return
 
-    CONFIG.get({ 'font-default': '', 'font-mono': '' }, (settings) => {
-      if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))) return
-      init(settings)
-    })
-  })
+    const settings = await new Promise((resolve) =>
+      CONFIG.get({ 'font-default': '', 'font-mono': '' }, resolve),
+    )
+    if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))) return
+
+    await init(settings)
+  } catch (error) {
+    console.error('❌ Error in preview function:', error)
+  }
 }
 
-// Main initialization function
 export const init = (settings) => {
   let { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
 
   const isSansFont = sansFont && sansFont.length > 0
   let isMonospaceFont = monospaceFont && monospaceFont.length > 0
 
-  if(!monospaceFont) {
-    monospaceFont = "monospace"
+  if (!monospaceFont) {
+    monospaceFont = 'monospace'
     isMonospaceFont = true
   }
 
@@ -251,9 +236,9 @@ export const init = (settings) => {
     { fontFamily: removePrefix(monospaceFont), isGoogleFont: isGoogleFont(monospaceFont) },
   ]
   const cssRules = getCssRules(fontObject)
-  const classContent = getClassContent(fontObject)
+  const classContent = getClassContent()
 
-  createStyleTag(STYLE_TAG_ID, cssRules.join('') + classContent)
+  createStyleTag(STYLE_TAG_ID, cssRules + classContent)
 
   document.documentElement.style.setProperty(
     'font-family',

@@ -7,43 +7,41 @@
 - https://www.30secondsofcode.org/js/s/inject-css/
 - https://material.io/blog/migrating-material-3
 */
+
 import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fn.js'
 
-invokeObserver()
+;(async () => {
+  invokeObserver()
+  await preview()
 
-window.addEventListener('DOMContentLoaded', () => {
-  invokeReplacer()
-})
+  window.addEventListener('DOMContentLoaded', () => {
+    invokeReplacer()
+  })
 
-preview()
+  document.addEventListener('DOMContentLoaded', preview) // Initial page load
+  window.addEventListener('load', preview) // Complete page load
 
-// Re-apply preview for dynamically loaded content
-document.addEventListener('DOMContentLoaded', preview)  // Initial page load
-window.addEventListener('load', preview)               // Complete page load
+  window.addEventListener('popstate', preview) // For history API
+  window.addEventListener('pushState', preview) // Custom events for SPA navigation
+  window.addEventListener('replaceState', preview) // Custom events for SPA navigation
 
-// Listen for navigation events if using React Router or similar SPA framework
-window.addEventListener('popstate', preview)           // For history API
-window.addEventListener('pushState', preview)          // Custom events for SPA navigation
-window.addEventListener('replaceState', preview)       // Custom events for SPA navigation
+  chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    switch (message.action) {
+      case 'executePreview':
+        await preview()
+        break
+      case 'executeCleanup':
+        cleanupStyles()
+        break
+      default:
+        console.error('❌ Unknown action:', message.action)
+        break
+    }
+  })
 
-// Listen for messages from the popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.action) {
-    case 'executePreview':
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
       preview()
-      break
-    case 'executeCleanup':
-      cleanupStyles()
-      break
-    default:
-      console.error('❌ Unknown action:', message.action)
-      break
-  }
-})
-
-// Listen for storage changes
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
-    preview()
-  }
-})
+    }
+  })
+})()
