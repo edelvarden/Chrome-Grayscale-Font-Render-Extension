@@ -90,16 +90,25 @@ const createStyleTag = (id, content) => {
 // Helper function to generate font face rule for each weight
 const getFontFace = (fontFamily, weights) => {
   const normalizedFont = fixName(fontFamily)
+  let fontStyle = 'normal'
+
   return weights
     .map(
-      (weight) => `
-    @font-face {
-      font-family: ${normalizedFont};
-      src: local(${normalizedFont});
-      font-weight: ${weight};
-      font-display: swap;
-    }
-  `,
+      (weight) => {
+
+        if(weight === 700){
+          fontStyle = 'bolder'
+        }
+
+        return `
+        @font-face {
+          font-style: ${fontStyle};
+          font-family: ${normalizedFont};
+          src: local(${normalizedFont});
+          font-display: swap;
+        }
+      `
+      },
     )
     .join('')
 }
