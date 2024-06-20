@@ -9,21 +9,26 @@
 */
 
 import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fn.js'
-
 ;(async () => {
   invokeObserver()
+
   await preview()
 
-  window.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     invokeReplacer()
   })
 
-  document.addEventListener('DOMContentLoaded', preview) // Initial page load
-  window.addEventListener('load', preview) // Complete page load
+  window.addEventListener('popstate', async () => {
+    await preview()
+  })
 
-  window.addEventListener('popstate', preview) // For history API
-  window.addEventListener('pushState', preview) // Custom events for SPA navigation
-  window.addEventListener('replaceState', preview) // Custom events for SPA navigation
+  window.addEventListener('pushState', async () => {
+    await preview()
+  })
+
+  window.addEventListener('replaceState', async () => {
+    await preview()
+  })
 
   chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     switch (message.action) {
@@ -39,9 +44,9 @@ import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/f
     }
   })
 
-  chrome.storage.onChanged.addListener((changes, area) => {
+  chrome.storage.onChanged.addListener(async (changes, area) => {
     if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
-      preview()
+      await preview()
     }
   })
 })()

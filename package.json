@@ -1,7 +1,7 @@
 {
   "name": "font-customizer",
   "displayName": "Font-Customizer",
-  "version": "2.7.9",
+  "version": "2.8.0",
   "author": "https://github.com/edelvarden",
   "description": "",
   "type": "module",
@@ -14,7 +14,7 @@
     "zip": "npm run build && node scripts/zip.js"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "^2.0.0-beta.19",
+    "@crxjs/vite-plugin": "^1.0.14",
     "prettier": "^3.0.3",
     "vite": "^4.4.11",
     "zip-a-folder": "^3.1.6"

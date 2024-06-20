@@ -7,6 +7,9 @@ on:
     paths:
       - "package.json" # Trigger workflow on changes in package.json
 
+env:
+  node_version: 20
+
 jobs:
   build:
     permissions:
@@ -21,20 +24,39 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.node_version }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install
 
       - name: Before build command
-        run: npm run fmt
+        run: pnpm fmt
 
       - name: Build the extension
-        run: npm run build
+        run: pnpm build
 
-      - name: Install web-ext
+      - name: Install web-ext globally
         run: |
-          npm install --global web-ext
+          pnpm install -g web-ext
 
       - name: Pack extension with web-ext
         run: |
@@ -60,7 +82,5 @@ jobs:
           name: ${{ env.TAG_NAME }}
           files: |
             build/*.zip
-            build/*.crx
-            build/*.xpi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

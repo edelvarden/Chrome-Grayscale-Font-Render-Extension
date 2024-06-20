@@ -88,32 +88,10 @@ const createOrUpdateStyleTag = (id, content) => {
     styleTag.disabled = false
   } else {
     // Create a new style tag if it doesn't exist
-    styleTag = $$$('style', { innerHTML: content }, { id, type: 'text/css' })
-    // document.head.prepend(styleTag)
-    document.documentElement.prepend(styleTag)
+    styleTag = $$$('style', { innerHTML: content }, { id })
+    document.head.prepend(styleTag)
+    // document.documentElement.prepend(styleTag)
   }
-}
-
-// Helper function to generate font face rule for each weight
-const getFontFace = (fontFamily, weights) => {
-  const normalizedFont = fixName(fontFamily)
-  let fontStyle = 'normal'
-
-  return weights
-    .map((weight) => {
-      if (weight === 700) {
-        fontStyle = 'bolder'
-      }
-      return `
-          @font-face {
-            font-style: ${fontStyle};
-            font-family: ${normalizedFont};
-            src: local(${normalizedFont});
-            font-display: swap;
-          }
-        `
-    })
-    .join('')
 }
 
 const getCssRules = (fontObject) => {
@@ -125,8 +103,6 @@ const getCssRules = (fontObject) => {
     const weights = isMonospace ? [400, 700] : [400, 700]
     if (font.isGoogleFont) {
       importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
-    } else if (font.fontFamily) {
-      cssRules.push(getFontFace(font.fontFamily, weights))
     }
   }
 
