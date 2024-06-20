@@ -69,21 +69,29 @@ const EXCLUDED_TAGS = [
 
 // Cleanup styles
 export const cleanupStyles = () => {
-  cleanupStyleTag(STYLE_TAG_ID)
+  toggleStyleTag(STYLE_TAG_ID, false)
   document.documentElement.style.removeProperty('font-family')
   document.body.style.removeProperty('font-family')
 }
 
-const cleanupStyleTag = (id) => $(`#${id}`)?.remove()
+const toggleStyleTag = (styleId, enable) => {
+  const styleTag = document.getElementById(styleId)
+  if (styleTag) {
+    styleTag.disabled = !enable
+  }
+}
 
-let cachedStyleTag
-
-const createStyleTag = (id, content) => {
-  if (content) {
-    cleanupStyleTag(id)
-    const styleTag = $$$('style', { innerHTML: content }, { id, type: 'text/css' })
-    // document.documentElement.prepend(styleTag)
-    document.head.prepend(styleTag)
+const createOrUpdateStyleTag = (id, content) => {
+  let styleTag = document.getElementById(id)
+  if (styleTag) {
+    // Update the content of the existing style tag
+    styleTag.innerHTML = content
+    styleTag.disabled = false
+  } else {
+    // Create a new style tag if it doesn't exist
+    styleTag = $$$('style', { innerHTML: content }, { id, type: 'text/css' })
+    // document.head.prepend(styleTag)
+    document.documentElement.prepend(styleTag)
   }
 }
 
@@ -93,75 +101,70 @@ const getFontFace = (fontFamily, weights) => {
   let fontStyle = 'normal'
 
   return weights
-    .map(
-      (weight) => {
-
-        if(weight === 700){
-          fontStyle = 'bolder'
-        }
-
-        return `
-        @font-face {
-          font-style: ${fontStyle};
-          font-family: ${normalizedFont};
-          src: local(${normalizedFont});
-          font-display: swap;
-        }
-      `
-      },
-    )
+    .map((weight) => {
+      if (weight === 700) {
+        fontStyle = 'bolder'
+      }
+      return `
+          @font-face {
+            font-style: ${fontStyle};
+            font-family: ${normalizedFont};
+            src: local(${normalizedFont});
+            font-display: swap;
+          }
+        `
+    })
     .join('')
 }
 
 const getCssRules = (fontObject) => {
-  const [sansFont, monospaceFont] = fontObject;
-  const cssRules = [];
-  const importFonts = [];
+  const [sansFont, monospaceFont] = fontObject
+  const cssRules = []
+  const importFonts = []
 
   const handleFont = (font, isMonospace = false) => {
-    const weights = isMonospace ? [400, 700] : [400, 700];
+    const weights = isMonospace ? [400, 700] : [400, 700]
     if (font.isGoogleFont) {
-      importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`);
+      importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     } else if (font.fontFamily) {
       cssRules.push(getFontFace(font.fontFamily, weights))
     }
-  };
+  }
 
-  handleFont(sansFont);
+  handleFont(sansFont)
   if (sansFont.fontFamily !== monospaceFont.fontFamily) {
-    handleFont(monospaceFont, true);
+    handleFont(monospaceFont, true)
   }
 
   if (importFonts.length > 0) {
-
     cssRules.unshift(
       `@import url('https://fonts.googleapis.com/css2?${importFonts.join('&')}&display=swap');`,
     )
   }
 
-  const rootCssVariables = [];
+  const rootCssVariables = []
   if (sansFont.fontFamily) {
-    rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`);
+    rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`)
   }
 
   if (monospaceFont.fontFamily) {
-    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)};`);
+    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)};`)
   }
 
-  cssRules.push(`:root {${rootCssVariables.join('')}}`);
+  cssRules.push(`:root {${rootCssVariables.join('')}}`)
 
-  return cssRules.join('');
-};
+  return cssRules.join('')
+}
 
 const getClassContent = () => {
   let classContent = `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
 
-  classContent += `html{font-family: var(--${SANS_CLASS})!important;}`
-  classContent += `body{font-family: var(--${SANS_CLASS})!important;}`
+  classContent += `html {font-family: var(--${SANS_CLASS}) !important;}`
+  classContent += `body {font-family: var(--${SANS_CLASS}) !important;}`
   classContent += `
-  pre, code, tt, kbd, samp, var {font-family:var(--${MONOSPACE_CLASS})!important;}
-  pre *, code *, tt *, kbd *, samp *, var * {font-family:var(--${MONOSPACE_CLASS})!important;}
-`
+    pre, code, tt, kbd, samp, var {font-family: var(--${MONOSPACE_CLASS}) !important;}
+    pre *, code *, tt *, kbd *, samp *, var * {font-family: var(--${MONOSPACE_CLASS}) !important;}
+  `
 
   return classContent
 }
@@ -244,7 +247,7 @@ export const init = (settings) => {
   const cssRules = getCssRules(fontObject)
   const classContent = getClassContent()
 
-  createStyleTag(STYLE_TAG_ID, cssRules + classContent)
+  createOrUpdateStyleTag(STYLE_TAG_ID, cssRules + classContent)
 
   document.documentElement.style.setProperty(
     'font-family',
