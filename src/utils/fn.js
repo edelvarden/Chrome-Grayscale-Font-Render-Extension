@@ -58,7 +58,6 @@ const EXCLUDED_TAGS = [
   'i',
   'mat-icon',
   'gf-load-icon-font',
-
   'textarea',
   'span',
   'div',
@@ -221,7 +220,7 @@ export const preview = async () => {
     )
     if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))) return
 
-    await init(settings)
+    init(settings)
   } catch (error) {
     console.error('❌ Error in preview function:', error)
   }
