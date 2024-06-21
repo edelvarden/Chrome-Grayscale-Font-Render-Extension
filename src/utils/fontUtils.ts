@@ -5,10 +5,10 @@ import { addHashSuffix, fixName, simpleErrorHandler, tl } from '@utils/stringUti
 // Constants with unique class names
 const SANS_CLASS = addHashSuffix('sans')
 const MONOSPACE_CLASS = addHashSuffix('monospace')
-export const STYLE_TAG_ID = addHashSuffix('style')
+const STYLE_TAG_ID = addHashSuffix('style')
 
 // Excluded tags for font replacement
-const EXCLUDED_TAGS = [
+const EXCLUDED_TAGS: string[] = [
   'i',
   'mat-icon',
   'gf-load-icon-font',
@@ -21,21 +21,21 @@ const EXCLUDED_TAGS = [
 ]
 
 // Cleanup styles
-export const cleanupStyles = () => {
+export const cleanupStyles = (): void => {
   toggleStyleTag(STYLE_TAG_ID, false)
   document.documentElement.style.removeProperty('font-family')
   document.body.style.removeProperty('font-family')
 }
 
-const toggleStyleTag = (styleId, enable) => {
-  const styleTag = document.getElementById(styleId)
+const toggleStyleTag = (styleId: string, enable: boolean): void => {
+  const styleTag: any = document.getElementById(styleId)
   if (styleTag) {
     styleTag.disabled = !enable
   }
 }
 
-const createOrUpdateStyleTag = (id, content) => {
-  let styleTag = document.getElementById(id)
+const createOrUpdateStyleTag = (id: string, content: string): void => {
+  let styleTag: any = document.getElementById(id)
   if (styleTag) {
     // Update the content of the existing style tag
     styleTag.innerHTML = content
@@ -48,37 +48,21 @@ const createOrUpdateStyleTag = (id, content) => {
   }
 }
 
-const getFontFace = (fontFamily, weights) => {
-  const normalizedFont = fixName(fontFamily)
-
-  return weights
-    .map((weight) => {
-      return `
-          @font-face {
-            font-family: ${normalizedFont};
-            font-style: normal;
-            font-weight: ${weight};
-            font-display: swap;
-            src: local(${normalizedFont});
-          }
-        `
-    })
-    .join('')
+type FontObject = {
+  fontFamily: string
+  isGoogleFont: boolean
 }
 
-const getCssRules = (fontObject) => {
+const getCssRules = (fontObject: FontObject[]): string => {
   const [sansFont, monospaceFont] = fontObject
-  const cssRules = []
-  const importFonts = []
+  const cssRules: string[] = []
+  const importFonts: string[] = []
 
-  const handleFont = (font, isMonospace = false) => {
+  const handleFont = (font: FontObject, isMonospace: boolean = false): void => {
     const weights = isMonospace ? [400, 700] : [400, 700]
     if (font.isGoogleFont) {
       importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     }
-    // else if (font.fontFamily) {
-    //   cssRules.push(getFontFace(font.fontFamily, weights))
-    // }
   }
 
   handleFont(sansFont)
@@ -92,7 +76,7 @@ const getCssRules = (fontObject) => {
     )
   }
 
-  const rootCssVariables = []
+  const rootCssVariables: string[] = []
   if (sansFont.fontFamily) {
     rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`)
   }
@@ -106,7 +90,7 @@ const getCssRules = (fontObject) => {
   return cssRules.join('')
 }
 
-const getClassContent = () => {
+const getClassContent = (): string => {
   let classContent = `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
 
   classContent += `html {font-family: var(--${SANS_CLASS}) !important;}`
@@ -120,7 +104,7 @@ const getClassContent = () => {
 }
 
 // Font replacement functions
-const getFontFamily = (element) => {
+const getFontFamily = (element: Element): string => {
   try {
     console.log(getComputedStyle(element).font)
     return getComputedStyle(element).fontFamily
@@ -130,24 +114,28 @@ const getFontFamily = (element) => {
   }
 }
 
-const replaceFont = (element) => {
+const replaceFont = (element: Element): boolean => {
   const fontFamily = getFontFamily(element)
   if (!fontFamily || fontFamily.length <= 1 || fontFamily.toLowerCase().includes('icon')) {
     return false
   }
 
   if (/monospace/.test(fontFamily)) {
-    element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
+    if (element instanceof HTMLElement) {
+      element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
+    }
     return true
   }
   if (/sans-serif|serif/.test(fontFamily)) {
-    element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
+    if (element instanceof HTMLElement) {
+      element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
+    }
     return true
   }
   return false
 }
 
-const replaceFonts = (elements) => {
+const replaceFonts = (elements: NodeListOf<Element>): void => {
   elements.forEach((element) => replaceFont(element))
 }
 
@@ -156,11 +144,13 @@ export const invokeReplacer = () => {
   replaceFonts(elements)
 }
 
-const debounce = (func, delay) => {
-  let timer
-  return (...args) => {
+type DebounceFunction = (...args: any[]) => void
+
+const debounce = (func: DebounceFunction, delay: number): DebounceFunction => {
+  let timer: number
+  return (...args: any[]) => {
     clearTimeout(timer)
-    timer = setTimeout(() => {
+    timer = window.setTimeout(() => {
       func(...args)
     }, delay)
   }
@@ -168,20 +158,21 @@ const debounce = (func, delay) => {
 
 const debouncedReplacer = debounce(invokeReplacer, 200)
 
-export const invokeObserver = () => {
+export const invokeObserver = (): void => {
   const observerOptions = { childList: true, subtree: true }
   const observer = new MutationObserver(debouncedReplacer)
   observer.observe(document, observerOptions)
 }
 
-export const preview = async () => {
+export const preview = async (): Promise<void> => {
   try {
-    const { off } = await new Promise((resolve) => LOCAL_CONFIG.get({ off: false }, resolve))
+    const { off } = (await LOCAL_CONFIG.get({ off: false })) as { off: boolean }
     if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD')) || off) return
 
-    const settings = await new Promise((resolve) =>
-      CONFIG.get({ 'font-default': '', 'font-mono': '' }, resolve),
-    )
+    const settings = (await CONFIG.get({ 'font-default': '', 'font-mono': '' })) as {
+      'font-default': string
+      'font-mono': string
+    }
     if (simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))) return
 
     init(settings)
@@ -190,7 +181,7 @@ export const preview = async () => {
   }
 }
 
-export const init = (settings) => {
+export const init = (settings: { 'font-default': string; 'font-mono': string }): void => {
   let { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
 
   const isSansFont = sansFont && sansFont.length > 0
@@ -203,7 +194,7 @@ export const init = (settings) => {
 
   if (!isSansFont && !isMonospaceFont) return cleanupStyles()
 
-  const fontObject = [
+  const fontObject: FontObject[] = [
     { fontFamily: removePrefix(sansFont), isGoogleFont: isGoogleFont(sansFont) },
     { fontFamily: removePrefix(monospaceFont), isGoogleFont: isGoogleFont(monospaceFont) },
   ]
@@ -225,5 +216,5 @@ export const init = (settings) => {
 }
 
 // Helper function to check if a font is a Google font
-const isGoogleFont = (fontId) => fontId.startsWith('GF-')
-const removePrefix = (fontId) => fontId.replace('GF-', '')
+const isGoogleFont = (fontId: string): boolean => fontId.startsWith('GF-')
+const removePrefix = (fontId: string): string => fontId.replace('GF-', '')

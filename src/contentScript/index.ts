@@ -8,7 +8,7 @@
 - https://material.io/blog/migrating-material-3
 */
 
-import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fontUtils.js'
+import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fontUtils'
 ;(async () => {
   invokeObserver()
 
@@ -30,7 +30,7 @@ import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/f
     await preview()
   })
 
-  chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener(async (message: any) => {
     switch (message.action) {
       case 'executePreview':
         await preview()
@@ -44,9 +44,11 @@ import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/f
     }
   })
 
-  chrome.storage.onChanged.addListener(async (changes, area) => {
-    if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
-      await preview()
-    }
-  })
+  chrome.storage.onChanged.addListener(
+    async (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+      if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
+        await preview()
+      }
+    },
+  )
 })()

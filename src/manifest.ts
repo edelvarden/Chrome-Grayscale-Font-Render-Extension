@@ -1,6 +1,8 @@
 import { defineManifest } from '@crxjs/vite-plugin'
+//@ts-ignore
 import packageData from '../package.json'
 
+//@ts-ignore
 const isDev = process.env.NODE_ENV == 'development'
 
 export default defineManifest({
@@ -21,7 +23,7 @@ export default defineManifest({
   content_scripts: [
     {
       matches: ['http://*/*', 'https://*/*'],
-      js: ['src/contentScript/index.js'],
+      js: ['src/contentScript/index.ts'],
     },
   ],
   permissions: ['activeTab', 'tabs', 'storage', 'scripting', 'unlimitedStorage', 'fontSettings'],

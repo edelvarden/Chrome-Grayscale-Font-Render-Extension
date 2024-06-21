@@ -26,6 +26,6 @@ Click on the extension icon to open the settings, then select the default font f
 
 If you switch to disabled this is disable font replacement only for current tab.
 
-| Before                                   | After                                   |
-| ---------------------------------------- | --------------------------------------- |
+| Before                                        | After                                        |
+| --------------------------------------------- | -------------------------------------------- |
 | ![alt text](docs/screenshots/font-before.png) | ![alt text](docs/screenshots/font-after.png) |
