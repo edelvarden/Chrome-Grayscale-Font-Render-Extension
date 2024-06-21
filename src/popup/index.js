@@ -1,7 +1,9 @@
 import '@material/web/elevation/elevation'
 import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/switch/switch'
-import { $, $$$, CONFIG, LOCAL_CONFIG, simpleErrorHandler, tl } from '@utils/fn'
+import { $, $$$ } from '@utils/domUtils'
+import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
+import { simpleErrorHandler, tl } from '@utils/stringUtils'
 import '../localize'
 import './index.css'
 

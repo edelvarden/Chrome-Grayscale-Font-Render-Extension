@@ -11,13 +11,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "fmt": "prettier --write 'src/*.{js,json,css,scss,md}'",
-    "zip": "npm run build && node scripts/zip.js"
+    "zip": "pnpm run build && node scripts/zip.js"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^1.0.14",
-    "prettier": "^3.0.3",
-    "vite": "^4.4.11",
-    "zip-a-folder": "^3.1.6"
+    "prettier": "^3.3.2",
+    "vite": "^4.5.3",
+    "zip-a-folder": "^3.1.7"
   },
   "dependencies": {
     "@material/web": "^1.5.0"

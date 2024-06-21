@@ -8,7 +8,7 @@
 - https://material.io/blog/migrating-material-3
 */
 
-import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fn.js'
+import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '@utils/fontUtils.js'
 ;(async () => {
   invokeObserver()
 

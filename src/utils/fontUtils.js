@@ -1,52 +1,6 @@
-// Chrome storage references
-export const CONFIG = chrome.storage.sync
-export const LOCAL_CONFIG = chrome.storage.local
-
-// Utility functions
-export const tl = (message, args = []) => chrome.i18n.getMessage(message, args)
-
-const isErrorOccurred = () =>
-  chrome.runtime.lastError && console.error('❌ ERROR:', chrome.runtime.lastError.message)
-
-export const simpleErrorHandler = (message) => {
-  if (isErrorOccurred()) {
-    alert(message)
-    return true
-  }
-  return false
-}
-
-export const $ = (selector, context = document) => context.querySelector(selector)
-export const $$ = (selector, context = document) => context.querySelectorAll(selector)
-
-// Element creation function
-export const $$$ = (tag, attributes = {}, customAttributes = {}, css = {}) => {
-  const element = document.createElement(tag)
-  Object.assign(element, attributes)
-  Object.entries(customAttributes).forEach(([key, value]) => element.setAttribute(key, value))
-  Object.assign(element.style, css)
-  return element
-}
-
-// Font name normalization
-const fixName = (name) =>
-  /^(?:serif|sans-serif|cursive|fantasy|monospace)$/.test(name.replace(/['"]/g, ''))
-    ? name
-    : `"${name.replace(/['"]/g, '')}"`
-
-// Hash generation
-const generateHash = (length) => {
-  if (!Number.isInteger(length) || length <= 0) {
-    throw new Error(`❌ Invalid length for hash generation: ${length}`)
-  }
-  const randomSymbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  return Array.from(
-    { length },
-    () => randomSymbols[Math.floor(Math.random() * randomSymbols.length)],
-  ).join('')
-}
-
-const addHashSuffix = (prefix) => `${prefix}__${generateHash(6)}`
+import { $$$ } from '@utils/domUtils'
+import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
+import { addHashSuffix, fixName, simpleErrorHandler, tl } from '@utils/stringUtils'
 
 // Constants with unique class names
 const SANS_CLASS = addHashSuffix('sans')
@@ -94,6 +48,24 @@ const createOrUpdateStyleTag = (id, content) => {
   }
 }
 
+const getFontFace = (fontFamily, weights) => {
+  const normalizedFont = fixName(fontFamily)
+
+  return weights
+    .map((weight) => {
+      return `
+          @font-face {
+            font-family: ${normalizedFont};
+            font-style: normal;
+            font-weight: ${weight};
+            font-display: swap;
+            src: local(${normalizedFont});
+          }
+        `
+    })
+    .join('')
+}
+
 const getCssRules = (fontObject) => {
   const [sansFont, monospaceFont] = fontObject
   const cssRules = []
@@ -104,6 +76,9 @@ const getCssRules = (fontObject) => {
     if (font.isGoogleFont) {
       importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     }
+    // else if (font.fontFamily) {
+    //   cssRules.push(getFontFace(font.fontFamily, weights))
+    // }
   }
 
   handleFont(sansFont)
@@ -147,6 +122,7 @@ const getClassContent = () => {
 // Font replacement functions
 const getFontFamily = (element) => {
   try {
+    console.log(getComputedStyle(element).font)
     return getComputedStyle(element).fontFamily
   } catch (error) {
     console.error('❌ Error getting font family:', error)
@@ -175,14 +151,26 @@ const replaceFonts = (elements) => {
   elements.forEach((element) => replaceFont(element))
 }
 
-export const invokeReplacer = (parent = document) => {
-  const elements = parent.querySelectorAll('*')
+export const invokeReplacer = () => {
+  const elements = document.querySelectorAll('*')
   replaceFonts(elements)
 }
 
+const debounce = (func, delay) => {
+  let timer
+  return (...args) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      func(...args)
+    }, delay)
+  }
+}
+
+const debouncedReplacer = debounce(invokeReplacer, 200)
+
 export const invokeObserver = () => {
   const observerOptions = { childList: true, subtree: true }
-  const observer = new MutationObserver(() => invokeReplacer(document))
+  const observer = new MutationObserver(debouncedReplacer)
   observer.observe(document, observerOptions)
 }
 
