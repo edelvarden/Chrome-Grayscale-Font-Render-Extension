@@ -90,7 +90,7 @@ const getCssRules = memo((fontObject: FontObject[]): string => {
 })
 
 const getClassContent = memo((fontObject: FontObject[]): string => {
-  const [sansFont, monospaceFont] = fontObject
+  const [sansFont] = fontObject
 
   let classContent = sansFont.fontFamily
     ? `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
