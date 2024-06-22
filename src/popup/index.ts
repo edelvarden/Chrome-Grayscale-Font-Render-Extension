@@ -91,11 +91,19 @@ const resetSettings = (): void => {
   })
 }
 
-const resetSelectValues = (): void => {
-  ['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
+const resetSelectValues = async (): Promise<void> => {
+  const selectIds = ['font-default', 'font-default2', 'font-mono', 'font-mono2']
+
+  for (const id of selectIds) {
     const select = document.querySelector<HTMLSelectElement>(`#${id}`)
-    if (select) select.value = ''
-  })
+    if (select) {
+      if (id === 'font-mono' || id === 'font-mono2') {
+        select.value = await getBrowserFixedFont()
+      } else {
+        select.value = ''
+      }
+    }
+  }
 }
 
 // Switch state functions
@@ -134,24 +142,34 @@ const handleAdvancedModeToggle = async (): Promise<void> => {
 }
 
 const getConfigSettings = async (): Promise<Partial<Settings>> => {
-  return (await CONFIG?.get({
+  const settings = (await CONFIG?.get({
     'font-default': '',
     'font-default2': '',
     'font-mono': '',
     'font-mono2': '',
   })) as Partial<Settings>
+
+  const fixedFont = await getBrowserFixedFont()
+
+  if (!settings['font-mono']) {
+    settings['font-mono'] = fixedFont
+  }
+  if (!settings['font-mono2']) {
+    settings['font-mono2'] = fixedFont
+  }
+
+  return settings
 }
 
 const updateFontList = async (): Promise<FontListItem[]> => {
   const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
   googleFontsList.forEach((googleFont: GoogleFont) => {
     if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
-      const fontId = 'GF-' + googleFont.fontFamily
+      const fontId = `GF-${googleFont.fontFamily}`
       fontList.push({ displayName: googleFont.displayName, fontId })
     }
   })
   fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
-  fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
   return fontList
 }
 
@@ -188,6 +206,9 @@ const initializeSettings = (
     </label>
   `
 
+  const optionsWithNone = fontList;
+  optionsWithNone.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
+
   const template: TemplateResult = html`
     <div class="surface">
       <md-elevation></md-elevation>
@@ -202,12 +223,14 @@ const initializeSettings = (
               </label>
             </div>
           </div>
-          ${['font-default', 'font-mono'].map(
-            (id) => html`
+          ${['font-default', 'font-mono'].map((id) => {
+
+            return html`
               <div class="settings__item">
                 <div class="select-label">
                   <span class="select-label__title">
                     ${id === 'font-default' ? tl('FONT_DEFAULT') : tl('FONT_MONOSPACE')}
+                    ${id === 'font-mono' ? html`<span class="important-mark">*</span>` : ''}
                   </span>
                   <span class="select-label__description">
                     ${id === 'font-default'
@@ -219,28 +242,28 @@ const initializeSettings = (
                   ${SelectComponent({
                     id,
                     value: fontSettings[id as keyof Settings] || '',
-                    options: fontList,
+                    options: id === 'font-default' ? optionsWithNone : fontList,
                     handleChange: handleSaveSettings,
                   })}
                   ${isAdvancedMode
                     ? html`
                         <div>
-                          <md-icon-button @click=${() => handleSwitchButtonClick(id, id + '2')}>
+                          <md-icon-button @click=${() => handleSwitchButtonClick(id, `${id}2`)}>
                             ${SwapIcon()}
                           </md-icon-button>
                         </div>
                         ${SelectComponent({
-                          id: id + '2',
-                          value: fontSettings[id + '2' as keyof Settings] || '',
-                          options: fontList,
+                          id: `${id}2`,
+                          value: fontSettings[`${id}2` as keyof Settings] || '',
+                          options: id === 'font-default' ? optionsWithNone : fontList,
                           handleChange: handleSaveSettings,
                         })}
                       `
                     : ''}
                 </div>
               </div>
-            `,
-          )}
+            `
+          })}
           <div class="settings__item">${advancedModeCheckbox}</div>
         </section>
       </div>
@@ -253,6 +276,17 @@ const initializeSettings = (
   } else {
     console.error('Main element not found!')
   }
+}
+
+const getBrowserFixedFont = async (): Promise<string> => {
+  let fixedFont = ''
+  try {
+    const details = await chrome.fontSettings.getFont({ genericFamily: 'fixed' })
+    fixedFont = details.fontId
+  } catch (error) {
+    console.error('Error getting fixed font:', error)
+  }
+  return fixedFont
 }
 
 // Add event listener to load event

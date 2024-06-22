@@ -1,6 +1,7 @@
 import { $$$ } from '@utils/domUtils'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
 import { addHashSuffix, fixName, simpleErrorHandler, tl } from '@utils/stringUtils'
+import { debounce } from './debounce'
 
 // Constants with unique class names
 const SANS_CLASS = addHashSuffix('sans')
@@ -36,7 +37,7 @@ const toggleStyleTag = (styleId: string, enable: boolean): void => {
 
 const createOrUpdateStyleTag = (id: string, content: string): void => {
   // console.log('trigger style tag update');
-  
+
   let styleTag: any = document.getElementById(id)
   if (styleTag) {
     // Update the content of the existing style tag
@@ -116,46 +117,33 @@ const getFontFamily = (element: Element): string => {
   }
 }
 
-const replaceFont = (element: Element): boolean => {
+const replaceFont = (element: HTMLElement): boolean => {
   const fontFamily = getFontFamily(element)
-  if (!fontFamily || fontFamily.length <= 1 || fontFamily.toLowerCase().includes('icon')) {
+
+  if (!fontFamily || fontFamily.split(',').length <= 1 || fontFamily.toLowerCase().includes('icon')) {
     return false
   }
 
   if (/monospace/.test(fontFamily)) {
-    if (element instanceof HTMLElement) {
-      element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
-    }
+    element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
     return true
   }
+
   if (/sans-serif|serif/.test(fontFamily)) {
-    if (element instanceof HTMLElement) {
-      element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
-    }
+    element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
     return true
   }
+
   return false
 }
 
-const replaceFonts = (elements: NodeListOf<Element>): void => {
+const replaceFonts = (elements: NodeListOf<HTMLElement>): void => {
   elements.forEach((element) => replaceFont(element))
 }
 
 export const invokeReplacer = () => {
-  const elements = document.querySelectorAll('*')
+  const elements = document.querySelectorAll('*') as NodeListOf<HTMLElement>
   replaceFonts(elements)
-}
-
-type DebounceFunction = (...args: any[]) => void
-
-const debounce = (func: DebounceFunction, delay: number): DebounceFunction => {
-  let timer: number
-  return (...args: any[]) => {
-    clearTimeout(timer)
-    timer = window.setTimeout(() => {
-      func(...args)
-    }, delay)
-  }
 }
 
 const debouncedReplacer = debounce(invokeReplacer, 200)

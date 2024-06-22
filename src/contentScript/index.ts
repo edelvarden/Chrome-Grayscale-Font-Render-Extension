@@ -10,8 +10,6 @@
 import { Message } from "@types";
 import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fontUtils'
 ;(async () => {
-  invokeObserver()
-
   await preview()
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -29,6 +27,8 @@ import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils
   window.addEventListener('replaceState', async () => {
     await preview()
   })
+
+  invokeObserver()
 
   chrome.runtime.onMessage.addListener(async (message: Message) => {
     switch (message.action) {
