@@ -12,7 +12,7 @@ import SelectComponent from './components/select'
 import './index.css'
 
 // Define types for variables
-let on: boolean = true // Explicitly define type for `on`
+let isOn = true // Explicitly define type for `isOn`
 
 // Function to send message to content script
 const sendMessageToContentScript = (message: Message): void => {
@@ -31,42 +31,42 @@ const startPreview = (): void => sendMessageToContentScript({ action: 'executePr
 const removeEffect = (): void => sendMessageToContentScript({ action: 'executeCleanup' })
 
 // Save function with settings parameter
-const save = (settings: { 'font-default'?: string; 'font-mono'?: string }): void => {
+const saveSettings = (settings: { 'font-default'?: string; 'font-mono'?: string }): void => {
   CONFIG?.set(settings, () => {
-    if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) && on) startPreview()
+    if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) && isOn) startPreview()
   })
 }
 
 // Reset function
-const reset = (): void => {
+const resetSettings = (): void => {
   CONFIG?.clear(() => {
     simpleErrorHandler(tl('ERROR_SETTINGS_RESET'))
     removeEffect()
 
-    const select_default = document.querySelector('#font-default') as HTMLSelectElement | null
-    const select_mono = document.querySelector('#font-mono') as HTMLSelectElement | null
+    const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
+    const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
 
-    if (select_default) select_default.value = ''
-    if (select_mono) select_mono.value = ''
+    if (selectDefault) selectDefault.value = ''
+    if (selectMono) selectMono.value = ''
 
-    if (!on) {
-      handleSwitch()
+    if (!isOn) {
+      handleSwitchToggle()
     }
 
-    initSwitchState()
+    initializeSwitchState()
   })
 }
 
 // Save settings function
-const saveSettings = (): void => {
-  const select_default = document.querySelector('#font-default') as HTMLSelectElement | null
-  const select_mono = document.querySelector('#font-mono') as HTMLSelectElement | null
+const handleSaveSettings = (): void => {
+  const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
+  const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
 
   const settings = {
-    'font-default': select_default?.value.trim() || '',
-    'font-mono': select_mono?.value.trim() || '',
+    'font-default': selectDefault?.value.trim() || '',
+    'font-mono': selectMono?.value.trim() || '',
   }
-  save(settings)
+  saveSettings(settings)
 }
 
 // Save switch state function
@@ -96,50 +96,50 @@ const getSwitchState = (): Promise<boolean | undefined> => {
 }
 
 // Initialize switch state asynchronously
-const initSwitchState = async (): Promise<void> => {
+const initializeSwitchState = async (): Promise<void> => {
   const switchState = await getSwitchState()
-  on = switchState !== false
-  const btn_switch = document.querySelector('#switch') as HTMLInputElement | null
-  if (btn_switch) btn_switch.checked = on // Adjusted to use `checked` for checkbox
+  isOn = switchState !== false
+  const switchElement = document.querySelector('#switch') as HTMLInputElement | null
+  if (switchElement) switchElement.checked = isOn // Adjusted to use `checked` for checkbox
 }
 
 // Handle switch function
-const handleSwitch = (): void => {
-  on = !on
-  saveSwitchState(on)
-  const btn_switch = document.querySelector('#switch') as HTMLInputElement | null
-  LOCAL_CONFIG?.set({ off: !on }, () => {
+const handleSwitchToggle = (): void => {
+  isOn = !isOn
+  saveSwitchState(isOn)
+  const switchElement = document.querySelector('#switch') as HTMLInputElement | null
+  LOCAL_CONFIG?.set({ off: !isOn }, () => {
     if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE'))) {
-      if (btn_switch) btn_switch.classList.toggle('on', on)
-      if (on) startPreview()
+      if (switchElement) switchElement.classList.toggle('on', isOn)
+      if (isOn) startPreview()
       else removeEffect()
     }
   })
 }
 
 // Initialize settings function with font settings and font list
-const initSettings = (
+const initializeSettings = (
   fontSettings: { 'font-default'?: string; 'font-mono'?: string },
   fontList: FontListItem[],
 ): void => {
-  const selectProps = {
+  const selectDefaultProps = {
     id: 'font-default',
     value: fontSettings['font-default'] || '',
     options: fontList,
-    handleChange: saveSettings,
+    handleChange: handleSaveSettings,
   }
-  const defaultSelect = SelectComponent(selectProps)
+  const defaultSelect = SelectComponent(selectDefaultProps)
 
-  const select2Props = {
+  const selectMonoProps = {
     id: 'font-mono',
     value: fontSettings['font-mono'] || '',
     options: fontList,
-    handleChange: saveSettings,
+    handleChange: handleSaveSettings,
   }
-  const monospaceSelect = SelectComponent(select2Props)
+  const monospaceSelect = SelectComponent(selectMonoProps)
 
   const resetButton = html`
-    <md-filled-tonal-icon-button id="reset" aria-label="reset-settings" @click=${reset}>
+    <md-filled-tonal-icon-button id="reset" aria-label="reset-settings" @click=${resetSettings}>
       ${ResetIcon()}
     </md-filled-tonal-icon-button>
   `
@@ -148,16 +148,16 @@ const initSettings = (
     <md-elevation></md-elevation>
     <div id="settings" class="settings-container">
       <!-- Default/Fixed Fonts selection -->
-      <section class="setting-inner">
+      <section class="settings__inner">
         <!-- Custom Fonts -->
         <div class="settings__item">
-          <h2 class="title">${tl('SETTINGS_TITLE_FONTS')}</h2>
-          <div style="display: flex; flex-direction: row; align-items: center; gap: 1rem;">
+          <h2 class="settings__title">${tl('SETTINGS_TITLE_FONTS')}</h2>
+          <div class="settings__controls">
             <!-- Reset settings button -->
             ${resetButton}
             <!-- Enable/Disable button -->
             <label>
-              <md-switch id="switch" selected @input=${handleSwitch}></md-switch>
+              <md-switch id="switch" selected @input=${handleSwitchToggle}></md-switch>
             </label>
           </div>
         </div>
@@ -166,14 +166,14 @@ const initSettings = (
             <span class="select-label__title">${tl('FONT_DEFAULT')}</span>
             <span class="select-label__description">${tl('FONT_DEFAULT_DESCRIPTION')}</span>
           </div>
-          <div>${defaultSelect}</div>
+          ${defaultSelect}
         </div>
         <div class="settings__item">
           <div class="select-label">
             <span class="select-label__title">${tl('FONT_MONOSPACE')}</span>
             <span class="select-label__description">${tl('FONT_MONOSPACE_DESCRIPTION')}</span>
           </div>
-          <div>${monospaceSelect}</div>
+          ${monospaceSelect}
         </div>
       </section>
     </div>
@@ -208,7 +208,7 @@ window.addEventListener('load', async () => {
     // (none) option
     fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
 
-    initSettings(fontSettings, fontList)
+    initializeSettings(fontSettings, fontList)
   } catch (error) {
     simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))
   }

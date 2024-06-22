@@ -4,7 +4,7 @@ import './select.css'
 
 interface SelectComponentProps {
   id: string
-  value: string | null
+  value?: string | null
   options: SelectOption[]
   handleChange: (event: Event) => void
 }
@@ -13,13 +13,15 @@ export default function SelectComponent(props: SelectComponentProps): TemplateRe
   const { id, value, options, handleChange } = props
 
   return html`
-    <select id="${id}" class="select" @change=${handleChange} .value="${value ?? ''}">
-      ${options.map(
-        (option) =>
-          html`<option value="${option.fontId}" ?selected=${option.fontId === value}>
-            ${option.displayName}
-          </option>`,
-      )}
-    </select>
+    <div style="position: relative">
+      <select id="${id}" class="select" @change=${handleChange} .value="${value ?? ''}">
+        ${options.map(
+          (option) =>
+            html`<option value="${option.fontId}" ?selected=${option.fontId === value}>
+              ${option.displayName}
+            </option>`,
+        )}
+      </select>
+    </div>
   `
 }
