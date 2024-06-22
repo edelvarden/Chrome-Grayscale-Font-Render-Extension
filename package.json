@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "fmt": "prettier --write '**/*.{ts,js,json,css,scss,md}'",
+    "fmt": "prettier --write 'src/**/*.{ts,js,json,css,scss,md}'",
     "zip": "pnpm run build && node scripts/zip.js"
   },
   "devDependencies": {
@@ -24,6 +24,7 @@
     "zip-a-folder": "^3.1.7"
   },
   "dependencies": {
-    "@material/web": "^1.5.0"
+    "@material/web": "^1.5.0",
+    "lit": "^3.1.4"
   }
 }

@@ -28,7 +28,8 @@
     "paths": {
       "@contentScript/*": ["src/contentScript/*"],
       "@popup/*": ["src/popup/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@types": ["src/@types"]
     }
   },
   "include": ["src/**/*.ts"],
