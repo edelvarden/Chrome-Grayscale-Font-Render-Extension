@@ -26,24 +26,22 @@ interface Settings {
 }
 
 // Utility function to query active tab
-const queryActiveTab = (callback: (tab: chrome.tabs.Tab) => void): void => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
-    if (tabs.length > 0) {
-      callback(tabs[0])
-    }
-  })
+const queryActiveTab = async (): Promise<chrome.tabs.Tab | undefined> => {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+  return tabs.length > 0 ? tabs[0] : undefined
 }
 
 // Function to send message to content script
-const sendMessageToContentScript = (message: Message): void => {
-  queryActiveTab((activeTab) => {
+const sendMessageToContentScript = async (message: Message) => {
+  const activeTab = await queryActiveTab()
+  if (activeTab) {
     chrome.tabs.sendMessage(activeTab.id!, message)
-  })
+  }
 }
 
 // Messaging functions
-const startPreview = (): void => sendMessageToContentScript({ action: 'executePreview' })
-const removeEffect = (): void => sendMessageToContentScript({ action: 'executeCleanup' })
+const startPreview = () => sendMessageToContentScript({ action: 'executePreview' })
+const removeEffect = () => sendMessageToContentScript({ action: 'executeCleanup' })
 
 // Storage functions
 const saveSettings = (settings: Partial<Settings>): void => {
@@ -52,30 +50,32 @@ const saveSettings = (settings: Partial<Settings>): void => {
   })
 }
 
-const saveSwitchState = (state: boolean): void => {
-  queryActiveTab((currentTab) => {
+const saveSwitchState = async (state: boolean): Promise<void> => {
+  const currentTab = await queryActiveTab()
+  if (currentTab) {
     const storageKey = `switch_state_${currentTab.url}`
     chrome.storage.sync.set({ [storageKey]: state })
-  })
+  }
 }
 
-const getSwitchState = (): Promise<boolean | undefined> => {
-  return new Promise((resolve) => {
-    queryActiveTab((currentTab) => {
-      const storageKey = `switch_state_${currentTab.url}`
+const getSwitchState = async (): Promise<boolean | undefined> => {
+  const currentTab = await queryActiveTab()
+  if (currentTab) {
+    const storageKey = `switch_state_${currentTab.url}`
+    return new Promise((resolve) => {
       chrome.storage.sync.get([storageKey], (result) => {
         resolve(result[storageKey])
       })
     })
-  })
+  }
+  return undefined
 }
 
 // Settings management functions
 const handleSaveSettings = (): void => {
   const settings: any = { ...CONFIG?.get() }
-
   ;['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
-    const select = document.querySelector(`#${id}`) as HTMLSelectElement | null
+    const select = document.querySelector<HTMLSelectElement>(`#${id}`)
     if (select) settings[id as keyof Settings] = select.value.trim() || ''
   })
   saveSettings(settings)
@@ -93,7 +93,7 @@ const resetSettings = (): void => {
 
 const resetSelectValues = (): void => {
   ['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
-    const select = document.querySelector(`#${id}`) as HTMLSelectElement | null
+    const select = document.querySelector<HTMLSelectElement>(`#${id}`)
     if (select) select.value = ''
   })
 }
@@ -102,14 +102,14 @@ const resetSelectValues = (): void => {
 const initializeSwitchState = async (): Promise<void> => {
   const switchState = await getSwitchState()
   isOn = switchState !== false
-  const switchElement = document.querySelector('#switch') as HTMLInputElement | null
+  const switchElement = document.querySelector<HTMLInputElement>('#switch')
   if (switchElement) switchElement.checked = isOn
 }
 
 const handleSwitchToggle = (): void => {
   isOn = !isOn
   saveSwitchState(isOn)
-  const switchElement = document.querySelector('#switch') as HTMLInputElement | null
+  const switchElement = document.querySelector<HTMLInputElement>('#switch')
   LOCAL_CONFIG?.set({ off: !isOn }, () => {
     if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE'))) {
       if (switchElement) switchElement.classList.toggle('on', isOn)
@@ -128,14 +128,18 @@ const handleSwitchButtonClick = (id1: string, id2: string): void => {
 const handleAdvancedModeToggle = async (): Promise<void> => {
   isAdvancedMode = !isAdvancedMode
   localStorage.setItem('isAdvancedMode', JSON.stringify(isAdvancedMode))
-  const fontSettings = await CONFIG?.get({
+  const fontSettings = await getConfigSettings()
+  const fontList = await updateFontList()
+  initializeSettings(fontSettings, fontList)
+}
+
+const getConfigSettings = async (): Promise<Partial<Settings>> => {
+  return (await CONFIG?.get({
     'font-default': '',
     'font-default2': '',
     'font-mono': '',
     'font-mono2': '',
-  }) as Partial<Settings>
-  const fontList = await updateFontList()
-  initializeSettings(fontSettings, fontList)
+  })) as Partial<Settings>
 }
 
 const updateFontList = async (): Promise<FontListItem[]> => {
@@ -152,8 +156,8 @@ const updateFontList = async (): Promise<FontListItem[]> => {
 }
 
 const swapSelectValues = (id1: string, id2: string): void => {
-  const select1 = document.querySelector(`#${id1}`) as HTMLSelectElement | null
-  const select2 = document.querySelector(`#${id2}`) as HTMLSelectElement | null
+  const select1 = document.querySelector<HTMLSelectElement>(`#${id1}`)
+  const select2 = document.querySelector<HTMLSelectElement>(`#${id2}`)
 
   if (select1 && select2) {
     const tempValue = select1.value
@@ -254,12 +258,7 @@ const initializeSettings = (
 // Add event listener to load event
 window.addEventListener('load', async () => {
   try {
-    const fontSettings = await CONFIG?.get({
-      'font-default': '',
-      'font-default2': '',
-      'font-mono': '',
-      'font-mono2': '',
-    }) as Partial<Settings>
+    const fontSettings = await getConfigSettings()
     const fontList = await updateFontList()
 
     const storedAdvancedMode = localStorage.getItem('isAdvancedMode')
