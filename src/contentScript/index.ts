@@ -45,11 +45,11 @@ import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils
     }
   })
 
-  chrome.storage.onChanged.addListener(
-    async (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
-      if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
-        await preview()
-      }
-    },
-  )
+  // chrome.storage.onChanged.addListener(
+  //   async (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+  //     if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
+  //       await preview()
+  //     }
+  //   },
+  // )
 })()

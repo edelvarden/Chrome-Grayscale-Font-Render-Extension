@@ -1,11 +1,11 @@
 :root {
   --md-arrow-width: 10px;
   --md-select-bg-color: var(--md-sys-color-surface);
-  /* --md-select-option-bg-color: #292a2d; */
   --md-select-option-bg-color: var(--md-sys-color-surface-container);
   --md-select-side-padding: 8px;
-  /* --md-select-text-color: #e8eaed; */
   --md-select-text-color: var(--md-sys-color-on-background);
+
+  --md-select-width: 180px;
 }
 
 .select {

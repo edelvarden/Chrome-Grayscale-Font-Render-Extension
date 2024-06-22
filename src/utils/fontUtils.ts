@@ -35,6 +35,8 @@ const toggleStyleTag = (styleId: string, enable: boolean): void => {
 }
 
 const createOrUpdateStyleTag = (id: string, content: string): void => {
+  // console.log('trigger style tag update');
+  
   let styleTag: any = document.getElementById(id)
   if (styleTag) {
     // Update the content of the existing style tag
@@ -106,7 +108,7 @@ const getClassContent = (): string => {
 // Font replacement functions
 const getFontFamily = (element: Element): string => {
   try {
-    console.log(getComputedStyle(element).font)
+    // console.log(getComputedStyle(element).font)
     return getComputedStyle(element).fontFamily
   } catch (error) {
     console.error('❌ Error getting font family:', error)

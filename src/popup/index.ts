@@ -1,5 +1,5 @@
 import '@material/web/elevation/elevation'
-import '@material/web/iconbutton/filled-tonal-icon-button'
+import '@material/web/iconbutton/icon-button'
 import '@material/web/switch/switch'
 import { FontListItem, GoogleFont, Message } from '@types'
 import { googleFontsList } from '@utils/constants'
@@ -8,6 +8,7 @@ import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
 import { simpleErrorHandler, tl } from '@utils/stringUtils'
 import { html, render } from 'lit'
 import ResetIcon from './components/icons/ResetIcon'
+import SwapIcon from './components/icons/SwapIcon'
 import SelectComponent from './components/select'
 import './index.css'
 
@@ -31,7 +32,12 @@ const startPreview = (): void => sendMessageToContentScript({ action: 'executePr
 const removeEffect = (): void => sendMessageToContentScript({ action: 'executeCleanup' })
 
 // Save function with settings parameter
-const saveSettings = (settings: { 'font-default'?: string; 'font-mono'?: string }): void => {
+const saveSettings = (settings: {
+  'font-default'?: string
+  'font-default2'?: string
+  'font-mono'?: string
+  'font-mono2'?: string
+}): void => {
   CONFIG?.set(settings, () => {
     if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) && isOn) startPreview()
   })
@@ -44,10 +50,14 @@ const resetSettings = (): void => {
     removeEffect()
 
     const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
+    const selectDefault2 = document.querySelector('#font-default2') as HTMLSelectElement | null
     const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
+    const selectMono2 = document.querySelector('#font-mono2') as HTMLSelectElement | null
 
     if (selectDefault) selectDefault.value = ''
+    if (selectDefault2) selectDefault2.value = ''
     if (selectMono) selectMono.value = ''
+    if (selectMono2) selectMono2.value = ''
 
     if (!isOn) {
       handleSwitchToggle()
@@ -60,11 +70,15 @@ const resetSettings = (): void => {
 // Save settings function
 const handleSaveSettings = (): void => {
   const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
+  const selectDefault2 = document.querySelector('#font-default2') as HTMLSelectElement | null
   const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
+  const selectMono2 = document.querySelector('#font-mono2') as HTMLSelectElement | null
 
   const settings = {
     'font-default': selectDefault?.value.trim() || '',
+    'font-default2': selectDefault2?.value.trim() || '',
     'font-mono': selectMono?.value.trim() || '',
+    'font-mono2': selectMono2?.value.trim() || '',
   }
   saveSettings(settings)
 }
@@ -117,31 +131,47 @@ const handleSwitchToggle = (): void => {
   })
 }
 
+const handleSwitchButtonClick = () => {
+  const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
+  const selectDefault2 = document.querySelector('#font-default2') as HTMLSelectElement | null
+
+  if (selectDefault && selectDefault2) {
+    const tempValue = selectDefault.value
+    selectDefault.value = selectDefault2.value
+    selectDefault2.value = tempValue
+
+    // Save the swapped values immediately
+    handleSaveSettings()
+  }
+}
+const handleSwitchButton2Click = () => {
+  const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
+  const selectMono2 = document.querySelector('#font-mono2') as HTMLSelectElement | null
+
+  if (selectMono && selectMono2) {
+    const tempValue = selectMono.value
+    selectMono.value = selectMono2.value
+    selectMono2.value = tempValue
+
+    // Save the swapped values immediately
+    handleSaveSettings()
+  }
+}
+
 // Initialize settings function with font settings and font list
 const initializeSettings = (
-  fontSettings: { 'font-default'?: string; 'font-mono'?: string },
+  fontSettings: {
+    'font-default'?: string
+    'font-default2'?: string
+    'font-mono'?: string
+    'font-mono2'?: string
+  },
   fontList: FontListItem[],
 ): void => {
-  const selectDefaultProps = {
-    id: 'font-default',
-    value: fontSettings['font-default'] || '',
-    options: fontList,
-    handleChange: handleSaveSettings,
-  }
-  const defaultSelect = SelectComponent(selectDefaultProps)
-
-  const selectMonoProps = {
-    id: 'font-mono',
-    value: fontSettings['font-mono'] || '',
-    options: fontList,
-    handleChange: handleSaveSettings,
-  }
-  const monospaceSelect = SelectComponent(selectMonoProps)
-
   const resetButton = html`
-    <md-filled-tonal-icon-button id="reset" aria-label="reset-settings" @click=${resetSettings}>
+    <md-icon-button id="reset" aria-label="reset-settings" @click=${resetSettings}>
       ${ResetIcon()}
-    </md-filled-tonal-icon-button>
+    </md-icon-button>
   `
 
   const template = html`<div class="surface">
@@ -166,14 +196,46 @@ const initializeSettings = (
             <span class="select-label__title">${tl('FONT_DEFAULT')}</span>
             <span class="select-label__description">${tl('FONT_DEFAULT_DESCRIPTION')}</span>
           </div>
-          ${defaultSelect}
+          <div class="settings__swap-container">
+          ${SelectComponent({
+            id: 'font-default',
+            value: fontSettings['font-default'] || '',
+            options: fontList,
+            handleChange: handleSaveSettings,
+          })}
+          <div>
+            <md-icon-button @click=${handleSwitchButtonClick}>${SwapIcon()}</md-icon-button>
+          </div>
+          ${SelectComponent({
+            id: 'font-default2',
+            value: fontSettings['font-default2'] || '',
+            options: fontList,
+            handleChange: handleSaveSettings,
+          })}
+          </div>
         </div>
-        <div class="settings__item">
+        <div class="settings__item" style="flex-direction: row;">
           <div class="select-label">
             <span class="select-label__title">${tl('FONT_MONOSPACE')}</span>
             <span class="select-label__description">${tl('FONT_MONOSPACE_DESCRIPTION')}</span>
           </div>
-          ${monospaceSelect}
+          <div class="settings__swap-container">
+            ${SelectComponent({
+              id: 'font-mono',
+              value: fontSettings['font-mono'] || '',
+              options: fontList,
+              handleChange: handleSaveSettings,
+            })}
+            <div>
+              <md-icon-button @click=${handleSwitchButton2Click}>${SwapIcon()}</md-icon-button>
+            </div>
+            ${SelectComponent({
+              id: 'font-mono2',
+              value: fontSettings['font-mono2'] || '',
+              options: fontList,
+              handleChange: handleSaveSettings,
+            })}
+          </div>
         </div>
       </section>
     </div>
@@ -192,7 +254,9 @@ window.addEventListener('load', async () => {
   try {
     const fontSettings = await CONFIG?.get({
       'font-default': '',
+      'font-default2': '',
       'font-mono': '',
+      'font-mono2': '',
     })
     const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
 
