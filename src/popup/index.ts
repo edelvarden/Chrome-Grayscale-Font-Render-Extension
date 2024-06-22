@@ -14,97 +14,98 @@ import SelectComponent from './components/select'
 import './index.css'
 
 // Define types for variables
-let isOn: boolean = true // Explicitly define type for `isOn`
+let isOn: boolean = true
 let isAdvancedMode: boolean = false
 
-// Function to send message to content script
-const sendMessageToContentScript = (message: Message): void => {
+// Type definition for settings
+interface Settings {
+  'font-default': string
+  'font-default2': string
+  'font-mono': string
+  'font-mono2': string
+}
+
+// Utility function to query active tab
+const queryActiveTab = (callback: (tab: chrome.tabs.Tab) => void): void => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
     if (tabs.length > 0) {
-      const activeTab = tabs[0]
-      chrome.tabs.sendMessage(activeTab.id!, message) // `id` is optional, use `!` to assert it exists
+      callback(tabs[0])
     }
   })
 }
 
-// Start preview function
-const startPreview = (): void => sendMessageToContentScript({ action: 'executePreview' })
+// Function to send message to content script
+const sendMessageToContentScript = (message: Message): void => {
+  queryActiveTab((activeTab) => {
+    chrome.tabs.sendMessage(activeTab.id!, message)
+  })
+}
 
-// Remove effect function
+// Messaging functions
+const startPreview = (): void => sendMessageToContentScript({ action: 'executePreview' })
 const removeEffect = (): void => sendMessageToContentScript({ action: 'executeCleanup' })
 
-// Save function with settings parameter
-const saveSettings = (settings: { [key: string]: any }): void => {
+// Storage functions
+const saveSettings = (settings: Partial<Settings>): void => {
   CONFIG?.set(settings, () => {
     if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) && isOn) startPreview()
   })
 }
 
-// Reset function
+const saveSwitchState = (state: boolean): void => {
+  queryActiveTab((currentTab) => {
+    const storageKey = `switch_state_${currentTab.url}`
+    chrome.storage.sync.set({ [storageKey]: state })
+  })
+}
+
+const getSwitchState = (): Promise<boolean | undefined> => {
+  return new Promise((resolve) => {
+    queryActiveTab((currentTab) => {
+      const storageKey = `switch_state_${currentTab.url}`
+      chrome.storage.sync.get([storageKey], (result) => {
+        resolve(result[storageKey])
+      })
+    })
+  })
+}
+
+// Settings management functions
+const handleSaveSettings = (): void => {
+  const settings: any = { ...CONFIG?.get() }
+
+  ;['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
+    const select = document.querySelector(`#${id}`) as HTMLSelectElement | null
+    if (select) settings[id as keyof Settings] = select.value.trim() || ''
+  })
+  saveSettings(settings)
+}
+
 const resetSettings = (): void => {
   CONFIG?.clear(() => {
     simpleErrorHandler(tl('ERROR_SETTINGS_RESET'))
     removeEffect()
-    ;['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
-      const select = document.querySelector(`#${id}`) as HTMLSelectElement | null
-      if (select) select.value = ''
-    })
-
-    if (!isOn) {
-      handleSwitchToggle()
-    }
-
+    resetSelectValues()
+    if (!isOn) handleSwitchToggle()
     initializeSwitchState()
   })
 }
 
-// Save settings function
-const handleSaveSettings = (): void => {
-  ;['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
+const resetSelectValues = (): void => {
+  ['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
     const select = document.querySelector(`#${id}`) as HTMLSelectElement | null
-    if (!select) return
-
-    const settings: { [key: string]: any } = { ...CONFIG?.get() }
-    settings[id] = select.value.trim() || ''
-    saveSettings(settings)
+    if (select) select.value = ''
   })
 }
 
-// Save switch state function
-const saveSwitchState = (state: boolean): void => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
-    if (tabs.length > 0) {
-      const currentTab = tabs[0]
-      const storageKey = `switch_state_${currentTab.url}`
-      chrome.storage.sync.set({ [storageKey]: state })
-    }
-  })
-}
-
-// Get switch state function returning a promise
-const getSwitchState = (): Promise<boolean | undefined> => {
-  return new Promise((resolve) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
-      if (tabs.length > 0) {
-        const currentTab = tabs[0]
-        const storageKey = `switch_state_${currentTab.url}`
-        chrome.storage.sync.get([storageKey], (result) => {
-          resolve(result[storageKey])
-        })
-      }
-    })
-  })
-}
-
-// Initialize switch state asynchronously
+// Switch state functions
 const initializeSwitchState = async (): Promise<void> => {
   const switchState = await getSwitchState()
   isOn = switchState !== false
   const switchElement = document.querySelector('#switch') as HTMLInputElement | null
-  if (switchElement) switchElement.checked = isOn // Adjusted to use `checked` for checkbox
+  if (switchElement) switchElement.checked = isOn
 }
 
-// Handle switch function
 const handleSwitchToggle = (): void => {
   isOn = !isOn
   saveSwitchState(isOn)
@@ -118,22 +119,12 @@ const handleSwitchToggle = (): void => {
   })
 }
 
-// Handle switch button click function
+// UI interaction functions
 const handleSwitchButtonClick = (id1: string, id2: string): void => {
-  const select1 = document.querySelector(`#${id1}`) as HTMLSelectElement | null
-  const select2 = document.querySelector(`#${id2}`) as HTMLSelectElement | null
-
-  if (select1 && select2) {
-    const tempValue = select1.value
-    select1.value = select2.value
-    select2.value = tempValue
-
-    // Save the swapped values immediately
-    handleSaveSettings()
-  }
+  swapSelectValues(id1, id2)
+  handleSaveSettings()
 }
 
-// Handle Advanced Mode toggle function
 const handleAdvancedModeToggle = async (): Promise<void> => {
   isAdvancedMode = !isAdvancedMode
   localStorage.setItem('isAdvancedMode', JSON.stringify(isAdvancedMode))
@@ -142,27 +133,37 @@ const handleAdvancedModeToggle = async (): Promise<void> => {
     'font-default2': '',
     'font-mono': '',
     'font-mono2': '',
-  })
-  const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
-
-  googleFontsList.forEach((googleFont: GoogleFont) => {
-    if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
-      const fontId = 'GF-' + googleFont.fontFamily // Prefix 'GF-'
-      fontList.push({ displayName: googleFont.displayName, fontId })
-    }
-  })
-
-  fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
-
-  // add (none) option
-  fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
-
+  }) as Partial<Settings>
+  const fontList = await updateFontList()
   initializeSettings(fontSettings, fontList)
 }
 
-// Initialize settings function with font settings and font list
+const updateFontList = async (): Promise<FontListItem[]> => {
+  const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
+  googleFontsList.forEach((googleFont: GoogleFont) => {
+    if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
+      const fontId = 'GF-' + googleFont.fontFamily
+      fontList.push({ displayName: googleFont.displayName, fontId })
+    }
+  })
+  fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
+  fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
+  return fontList
+}
+
+const swapSelectValues = (id1: string, id2: string): void => {
+  const select1 = document.querySelector(`#${id1}`) as HTMLSelectElement | null
+  const select2 = document.querySelector(`#${id2}`) as HTMLSelectElement | null
+
+  if (select1 && select2) {
+    const tempValue = select1.value
+    select1.value = select2.value
+    select2.value = tempValue
+  }
+}
+
 const initializeSettings = (
-  fontSettings: { [key: string]: any },
+  fontSettings: Partial<Settings>,
   fontList: FontListItem[] = [],
 ): void => {
   const resetButton: TemplateResult = html`
@@ -187,50 +188,46 @@ const initializeSettings = (
     <div class="surface">
       <md-elevation></md-elevation>
       <div id="settings" class="settings-container">
-        <!-- Default/Fixed Fonts selection -->
         <section class="settings__inner">
           <div class="settings__item">
             <h2 class="settings__title">${tl('SETTINGS_TITLE_FONTS')}</h2>
             <div class="settings__controls">
-              <!-- Reset settings button -->
               ${resetButton}
-              <!-- Enable/Disable button -->
               <label>
                 <md-switch id="switch" selected @input=${handleSwitchToggle}></md-switch>
               </label>
             </div>
           </div>
-          <!-- Additional settings items for fonts -->
           ${['font-default', 'font-mono'].map(
             (id) => html`
               <div class="settings__item">
                 <div class="select-label">
-                  <span class="select-label__title"
-                    >${id === 'font-default' ? tl('FONT_DEFAULT') : tl('FONT_MONOSPACE')}</span
-                  >
-                  <span class="select-label__description"
-                    >${id === 'font-default'
+                  <span class="select-label__title">
+                    ${id === 'font-default' ? tl('FONT_DEFAULT') : tl('FONT_MONOSPACE')}
+                  </span>
+                  <span class="select-label__description">
+                    ${id === 'font-default'
                       ? tl('FONT_DEFAULT_DESCRIPTION')
-                      : tl('FONT_MONOSPACE_DESCRIPTION')}</span
-                  >
+                      : tl('FONT_MONOSPACE_DESCRIPTION')}
+                  </span>
                 </div>
                 <div class="settings__swap-container">
                   ${SelectComponent({
                     id,
-                    value: fontSettings[id] || '',
+                    value: fontSettings[id as keyof Settings] || '',
                     options: fontList,
                     handleChange: handleSaveSettings,
                   })}
                   ${isAdvancedMode
                     ? html`
                         <div>
-                          <md-icon-button @click=${() => handleSwitchButtonClick(id, id + '2')}
-                            >${SwapIcon()}</md-icon-button
-                          >
+                          <md-icon-button @click=${() => handleSwitchButtonClick(id, id + '2')}>
+                            ${SwapIcon()}
+                          </md-icon-button>
                         </div>
                         ${SelectComponent({
                           id: id + '2',
-                          value: fontSettings[id + '2'] || '',
+                          value: fontSettings[id + '2' as keyof Settings] || '',
                           options: fontList,
                           handleChange: handleSaveSettings,
                         })}
@@ -246,7 +243,6 @@ const initializeSettings = (
     </div>
   `
 
-  // Render the template
   const mainElement = document.querySelector('main')
   if (mainElement) {
     render(template, mainElement)
@@ -263,22 +259,9 @@ window.addEventListener('load', async () => {
       'font-default2': '',
       'font-mono': '',
       'font-mono2': '',
-    })
-    const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
+    }) as Partial<Settings>
+    const fontList = await updateFontList()
 
-    googleFontsList.forEach((googleFont: GoogleFont) => {
-      if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
-        const fontId = 'GF-' + googleFont.fontFamily // Prefix 'GF-'
-        fontList.push({ displayName: googleFont.displayName, fontId })
-      }
-    })
-
-    fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
-
-    // add (none) option
-    fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
-
-    // Initialize isAdvancedMode from local storage
     const storedAdvancedMode = localStorage.getItem('isAdvancedMode')
     if (storedAdvancedMode !== null) {
       isAdvancedMode = JSON.parse(storedAdvancedMode)
