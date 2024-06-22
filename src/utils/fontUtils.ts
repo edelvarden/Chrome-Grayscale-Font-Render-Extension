@@ -37,18 +37,13 @@ const toggleStyleTag = (styleId: string, enable: boolean): void => {
 }
 
 const createOrUpdateStyleTag = (id: string, content: string): void => {
-  // console.log('trigger style tag update');
-
   let styleTag: any = document.getElementById(id)
   if (styleTag) {
-    // Update the content of the existing style tag
     styleTag.innerHTML = content
     styleTag.disabled = false
   } else {
-    // Create a new style tag if it doesn't exist
     styleTag = $$$('style', { innerHTML: content }, { id })
     document.head.prepend(styleTag)
-    // document.documentElement.prepend(styleTag)
   }
 }
 
@@ -97,7 +92,9 @@ const getCssRules = memo((fontObject: FontObject[]): string => {
 const getClassContent = memo((fontObject: FontObject[]): string => {
   const [sansFont, monospaceFont] = fontObject
 
-  let classContent = sansFont.fontFamily ? `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}` : ''
+  let classContent = sansFont.fontFamily
+    ? `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
+    : ''
 
   classContent += sansFont.fontFamily ? `html {font-family: var(--${SANS_CLASS}) !important;}` : ''
   classContent += sansFont.fontFamily ? `body {font-family: var(--${SANS_CLASS}) !important;}` : ''
@@ -123,7 +120,11 @@ const getFontFamily = (element: Element): string => {
 const replaceFont = (element: HTMLElement): boolean => {
   const fontFamily = getFontFamily(element)
 
-  if (!fontFamily || fontFamily.split(',').length <= 1 || fontFamily.toLowerCase().includes('icon')) {
+  if (
+    !fontFamily ||
+    fontFamily.split(',').length <= 1 ||
+    fontFamily.toLowerCase().includes('icon')
+  ) {
     return false
   }
 
@@ -191,6 +192,7 @@ export const init = (settings: { 'font-default': string; 'font-mono': string }):
     { fontFamily: removePrefix(sansFont), isGoogleFont: isGoogleFont(sansFont) },
     { fontFamily: removePrefix(monospaceFont), isGoogleFont: isGoogleFont(monospaceFont) },
   ]
+
   const cssRules = getCssRules(fontObject)
   const classContent = getClassContent(fontObject)
 
