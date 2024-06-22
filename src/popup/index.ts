@@ -1,3 +1,4 @@
+import '@material/web/checkbox/checkbox'
 import '@material/web/elevation/elevation'
 import '@material/web/iconbutton/icon-button'
 import '@material/web/switch/switch'
@@ -14,6 +15,7 @@ import './index.css'
 
 // Define types for variables
 let isOn = true // Explicitly define type for `isOn`
+let isAdvancedMode = false
 
 // Function to send message to content script
 const sendMessageToContentScript = (message: Message): void => {
@@ -158,6 +160,49 @@ const handleSwitchButton2Click = () => {
   }
 }
 
+// Handle Advanced Mode toggle function
+const handleAdvancedModeToggle = async () => {
+  isAdvancedMode = !isAdvancedMode
+  saveAdvancedModeState(isAdvancedMode) // Save the state to local storage
+  
+  try {
+    const fontSettings = await CONFIG?.get({
+      'font-default': '',
+      'font-default2': '',
+      'font-mono': '',
+      'font-mono2': '',
+    })
+    const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
+
+    googleFontsList.forEach((googleFont: GoogleFont) => {
+      if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
+        const fontId = 'GF-' + googleFont.fontFamily // Prefix 'GF-'
+        fontList.push({ displayName: googleFont.displayName, fontId })
+      }
+    })
+
+    fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
+
+    // add (none) option
+    fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
+
+    // Initialize isAdvancedMode from local storage
+    const storedAdvancedMode = localStorage.getItem('isAdvancedMode')
+    if (storedAdvancedMode !== null) {
+      isAdvancedMode = JSON.parse(storedAdvancedMode)
+    }
+
+    initializeSettings(fontSettings, fontList)
+  } catch (error) {
+    simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))
+  }
+}
+
+// Save Advanced Mode state function
+const saveAdvancedModeState = (state: boolean): void => {
+  localStorage.setItem('isAdvancedMode', JSON.stringify(state))
+}
+
 // Initialize settings function with font settings and font list
 const initializeSettings = (
   fontSettings: {
@@ -165,8 +210,13 @@ const initializeSettings = (
     'font-default2'?: string
     'font-mono'?: string
     'font-mono2'?: string
+  } = {
+    'font-default': '',
+    'font-default2': '',
+    'font-mono': '',
+    'font-mono2': '',
   },
-  fontList: FontListItem[],
+  fontList: FontListItem[] = [],
 ): void => {
   const resetButton = html`
     <md-icon-button id="reset" aria-label="reset-settings" @click=${resetSettings}>
@@ -174,73 +224,101 @@ const initializeSettings = (
     </md-icon-button>
   `
 
-  const template = html`<div class="surface">
-    <md-elevation></md-elevation>
-    <div id="settings" class="settings-container">
-      <!-- Default/Fixed Fonts selection -->
-      <section class="settings__inner">
-        <!-- Custom Fonts -->
-        <div class="settings__item">
-          <h2 class="settings__title">${tl('SETTINGS_TITLE_FONTS')}</h2>
-          <div class="settings__controls">
-            <!-- Reset settings button -->
-            ${resetButton}
-            <!-- Enable/Disable button -->
-            <label>
-              <md-switch id="switch" selected @input=${handleSwitchToggle}></md-switch>
-            </label>
-          </div>
-        </div>
-        <div class="settings__item">
-          <div class="select-label">
-            <span class="select-label__title">${tl('FONT_DEFAULT')}</span>
-            <span class="select-label__description">${tl('FONT_DEFAULT_DESCRIPTION')}</span>
-          </div>
-          <div class="settings__swap-container">
-          ${SelectComponent({
-            id: 'font-default',
-            value: fontSettings['font-default'] || '',
-            options: fontList,
-            handleChange: handleSaveSettings,
-          })}
-          <div>
-            <md-icon-button @click=${handleSwitchButtonClick}>${SwapIcon()}</md-icon-button>
-          </div>
-          ${SelectComponent({
-            id: 'font-default2',
-            value: fontSettings['font-default2'] || '',
-            options: fontList,
-            handleChange: handleSaveSettings,
-          })}
-          </div>
-        </div>
-        <div class="settings__item" style="flex-direction: row;">
-          <div class="select-label">
-            <span class="select-label__title">${tl('FONT_MONOSPACE')}</span>
-            <span class="select-label__description">${tl('FONT_MONOSPACE_DESCRIPTION')}</span>
-          </div>
-          <div class="settings__swap-container">
-            ${SelectComponent({
-              id: 'font-mono',
-              value: fontSettings['font-mono'] || '',
-              options: fontList,
-              handleChange: handleSaveSettings,
-            })}
-            <div>
-              <md-icon-button @click=${handleSwitchButton2Click}>${SwapIcon()}</md-icon-button>
-            </div>
-            ${SelectComponent({
-              id: 'font-mono2',
-              value: fontSettings['font-mono2'] || '',
-              options: fontList,
-              handleChange: handleSaveSettings,
-            })}
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>`
+  const advancedModeCheckbox = html`
+    <label style="display: flex; flex-direction: row; align-items: center;">
+      <md-checkbox
+        id="advancedModeCheckbox"
+        touch-target="wrapper"
+        @change=${handleAdvancedModeToggle}
+        .checked=${isAdvancedMode}
+      ></md-checkbox>
+      Advanced mode
+    </label>
+  `
 
+  const template = html`
+    <div class="surface">
+      <md-elevation></md-elevation>
+      <div id="settings" class="settings-container">
+        <!-- Default/Fixed Fonts selection -->
+        <section class="settings__inner">
+          <div class="settings__item">
+            <h2 class="settings__title">${tl('SETTINGS_TITLE_FONTS')}</h2>
+            <div class="settings__controls">
+              <!-- Reset settings button -->
+              ${resetButton}
+              <!-- Enable/Disable button -->
+              <label>
+                <md-switch id="switch" selected @input=${handleSwitchToggle}></md-switch>
+              </label>
+            </div>
+          </div>
+          <!-- Additional settings items for fonts -->
+          <div class="settings__item">
+            <div class="select-label">
+              <span class="select-label__title">${tl('FONT_DEFAULT')}</span>
+              <span class="select-label__description">${tl('FONT_DEFAULT_DESCRIPTION')}</span>
+            </div>
+            <div class="settings__swap-container">
+              ${SelectComponent({
+                id: 'font-default',
+                value: fontSettings['font-default'] || '',
+                options: fontList,
+                handleChange: handleSaveSettings,
+              })}
+              ${isAdvancedMode
+                ? html`
+                    <div>
+                      <md-icon-button @click=${handleSwitchButtonClick}
+                        >${SwapIcon()}</md-icon-button
+                      >
+                    </div>
+                    ${SelectComponent({
+                      id: 'font-default2',
+                      value: fontSettings['font-default2'] || '',
+                      options: fontList,
+                      handleChange: handleSaveSettings,
+                    })}
+                  `
+                : ''}
+            </div>
+          </div>
+          <div class="settings__item">
+            <div class="select-label">
+              <span class="select-label__title">${tl('FONT_MONOSPACE')}</span>
+              <span class="select-label__description">${tl('FONT_MONOSPACE_DESCRIPTION')}</span>
+            </div>
+            <div class="settings__swap-container">
+              ${SelectComponent({
+                id: 'font-mono',
+                value: fontSettings['font-mono'] || '',
+                options: fontList,
+                handleChange: handleSaveSettings,
+              })}
+              ${isAdvancedMode
+                ? html`
+                    <div>
+                      <md-icon-button @click=${handleSwitchButton2Click}
+                        >${SwapIcon()}</md-icon-button
+                      >
+                    </div>
+                    ${SelectComponent({
+                      id: 'font-mono2',
+                      value: fontSettings['font-mono2'] || '',
+                      options: fontList,
+                      handleChange: handleSaveSettings,
+                    })}
+                  `
+                : ''}
+            </div>
+          </div>
+          <div class="settings__item">${advancedModeCheckbox}</div>
+        </section>
+      </div>
+    </div>
+  `
+
+  // Render the template
   const mainElement = document.querySelector('main')
   if (mainElement) {
     render(template, mainElement)
@@ -269,8 +347,14 @@ window.addEventListener('load', async () => {
 
     fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
 
-    // (none) option
+    // add (none) option
     fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
+
+    // Initialize isAdvancedMode from local storage
+    const storedAdvancedMode = localStorage.getItem('isAdvancedMode')
+    if (storedAdvancedMode !== null) {
+      isAdvancedMode = JSON.parse(storedAdvancedMode)
+    }
 
     initializeSettings(fontSettings, fontList)
   } catch (error) {
