@@ -2,6 +2,7 @@ import { $$$ } from '@utils/domUtils'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
 import { addHashSuffix, fixName, simpleErrorHandler, tl } from '@utils/stringUtils'
 import { debounce } from './debounce'
+import { memo } from "./memo"
 
 // Constants with unique class names
 const SANS_CLASS = addHashSuffix('sans')
@@ -56,7 +57,7 @@ type FontObject = {
   isGoogleFont: boolean
 }
 
-const getCssRules = (fontObject: FontObject[]): string => {
+const getCssRules = memo((fontObject: FontObject[]): string => {
   const [sansFont, monospaceFont] = fontObject
   const cssRules: string[] = []
   const importFonts: string[] = []
@@ -91,20 +92,22 @@ const getCssRules = (fontObject: FontObject[]): string => {
   cssRules.push(`:root {${rootCssVariables.join('')}}`)
 
   return cssRules.join('')
-}
+})
 
-const getClassContent = (): string => {
-  let classContent = `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
+const getClassContent = memo((fontObject: FontObject[]): string => {
+  const [sansFont, monospaceFont] = fontObject
 
-  classContent += `html {font-family: var(--${SANS_CLASS}) !important;}`
-  classContent += `body {font-family: var(--${SANS_CLASS}) !important;}`
+  let classContent = sansFont.fontFamily ? `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}` : ''
+
+  classContent += sansFont.fontFamily ? `html {font-family: var(--${SANS_CLASS}) !important;}` : ''
+  classContent += sansFont.fontFamily ? `body {font-family: var(--${SANS_CLASS}) !important;}` : ''
   classContent += `
     pre, code, tt, kbd, samp, var {font-family: var(--${MONOSPACE_CLASS}) !important;}
     pre *, code *, tt *, kbd *, samp *, var * {font-family: var(--${MONOSPACE_CLASS}) !important;}
   `
 
   return classContent
-}
+})
 
 // Font replacement functions
 const getFontFamily = (element: Element): string => {
@@ -189,7 +192,7 @@ export const init = (settings: { 'font-default': string; 'font-mono': string }):
     { fontFamily: removePrefix(monospaceFont), isGoogleFont: isGoogleFont(monospaceFont) },
   ]
   const cssRules = getCssRules(fontObject)
-  const classContent = getClassContent()
+  const classContent = getClassContent(fontObject)
 
   createOrUpdateStyleTag(STYLE_TAG_ID, cssRules + classContent)
 
