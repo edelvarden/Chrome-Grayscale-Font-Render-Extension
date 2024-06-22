@@ -1,7 +1,7 @@
 import '@material/web/elevation/elevation'
 import '@material/web/iconbutton/filled-tonal-icon-button'
 import '@material/web/switch/switch'
-import { FontListItem, GoogleFont } from '@types'
+import { FontListItem, GoogleFont, Message } from '@types'
 import { googleFontsList } from '@utils/constants'
 import '@utils/localize'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
@@ -13,11 +13,6 @@ import './index.css'
 
 // Define types for variables
 let on: boolean = true // Explicitly define type for `on`
-
-// Type for message object
-interface Message {
-  action: string
-}
 
 // Function to send message to content script
 const sendMessageToContentScript = (message: Message): void => {
@@ -38,7 +33,7 @@ const removeEffect = (): void => sendMessageToContentScript({ action: 'executeCl
 // Save function with settings parameter
 const save = (settings: { 'font-default'?: string; 'font-mono'?: string }): void => {
   CONFIG?.set(settings, () => {
-    simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) || (on && startPreview())
+    if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) && on) startPreview()
   })
 }
 
@@ -54,7 +49,7 @@ const reset = (): void => {
     if (select_default) select_default.value = ''
     if (select_mono) select_mono.value = ''
 
-    if (on === false) {
+    if (!on) {
       handleSwitch()
     }
 
@@ -77,9 +72,11 @@ const saveSettings = (): void => {
 // Save switch state function
 const saveSwitchState = (state: boolean): void => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
-    const currentTab = tabs[0]
-    const storageKey = `switch_state_${currentTab.url}`
-    chrome.storage.sync.set({ [storageKey]: state })
+    if (tabs.length > 0) {
+      const currentTab = tabs[0]
+      const storageKey = `switch_state_${currentTab.url}`
+      chrome.storage.sync.set({ [storageKey]: state })
+    }
   })
 }
 
@@ -87,11 +84,13 @@ const saveSwitchState = (state: boolean): void => {
 const getSwitchState = (): Promise<boolean | undefined> => {
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
-      const currentTab = tabs[0]
-      const storageKey = `switch_state_${currentTab.url}`
-      chrome.storage.sync.get([storageKey], (result) => {
-        resolve(result[storageKey])
-      })
+      if (tabs.length > 0) {
+        const currentTab = tabs[0]
+        const storageKey = `switch_state_${currentTab.url}`
+        chrome.storage.sync.get([storageKey], (result) => {
+          resolve(result[storageKey])
+        })
+      }
     })
   })
 }
@@ -110,8 +109,11 @@ const handleSwitch = (): void => {
   saveSwitchState(on)
   const btn_switch = document.querySelector('#switch') as HTMLInputElement | null
   LOCAL_CONFIG?.set({ off: !on }, () => {
-    simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) ||
-      (btn_switch?.classList.toggle('on', on), on ? startPreview() : removeEffect()) // Toggle class based on `on` state
+    if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE'))) {
+      if (btn_switch) btn_switch.classList.toggle('on', on)
+      if (on) startPreview()
+      else removeEffect()
+    }
   })
 }
 

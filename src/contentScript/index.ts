@@ -8,6 +8,7 @@
 - https://material.io/blog/migrating-material-3
 */
 
+import { Message } from "@types";
 import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fontUtils'
 ;(async () => {
   invokeObserver()
@@ -30,7 +31,7 @@ import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils
     await preview()
   })
 
-  chrome.runtime.onMessage.addListener(async (message: any) => {
+  chrome.runtime.onMessage.addListener(async (message: Message) => {
     switch (message.action) {
       case 'executePreview':
         await preview()

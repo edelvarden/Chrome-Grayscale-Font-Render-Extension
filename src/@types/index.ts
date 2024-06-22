@@ -16,3 +16,6 @@ export interface SelectOption {
   displayName: string
 }
 
+export interface Message {
+  action: string
+}
