@@ -7,15 +7,15 @@ import { googleFontsList } from '@utils/constants'
 import '@utils/localize'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
 import { simpleErrorHandler, tl } from '@utils/stringUtils'
-import { html, render } from 'lit'
+import { TemplateResult, html, render } from 'lit'
 import ResetIcon from './components/icons/ResetIcon'
 import SwapIcon from './components/icons/SwapIcon'
 import SelectComponent from './components/select'
 import './index.css'
 
 // Define types for variables
-let isOn = true // Explicitly define type for `isOn`
-let isAdvancedMode = false
+let isOn: boolean = true // Explicitly define type for `isOn`
+let isAdvancedMode: boolean = false
 
 // Function to send message to content script
 const sendMessageToContentScript = (message: Message): void => {
@@ -34,12 +34,7 @@ const startPreview = (): void => sendMessageToContentScript({ action: 'executePr
 const removeEffect = (): void => sendMessageToContentScript({ action: 'executeCleanup' })
 
 // Save function with settings parameter
-const saveSettings = (settings: {
-  'font-default'?: string
-  'font-default2'?: string
-  'font-mono'?: string
-  'font-mono2'?: string
-}): void => {
+const saveSettings = (settings: { [key: string]: any }): void => {
   CONFIG?.set(settings, () => {
     if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) && isOn) startPreview()
   })
@@ -50,16 +45,10 @@ const resetSettings = (): void => {
   CONFIG?.clear(() => {
     simpleErrorHandler(tl('ERROR_SETTINGS_RESET'))
     removeEffect()
-
-    const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
-    const selectDefault2 = document.querySelector('#font-default2') as HTMLSelectElement | null
-    const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
-    const selectMono2 = document.querySelector('#font-mono2') as HTMLSelectElement | null
-
-    if (selectDefault) selectDefault.value = ''
-    if (selectDefault2) selectDefault2.value = ''
-    if (selectMono) selectMono.value = ''
-    if (selectMono2) selectMono2.value = ''
+    ;['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
+      const select = document.querySelector(`#${id}`) as HTMLSelectElement | null
+      if (select) select.value = ''
+    })
 
     if (!isOn) {
       handleSwitchToggle()
@@ -71,18 +60,14 @@ const resetSettings = (): void => {
 
 // Save settings function
 const handleSaveSettings = (): void => {
-  const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
-  const selectDefault2 = document.querySelector('#font-default2') as HTMLSelectElement | null
-  const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
-  const selectMono2 = document.querySelector('#font-mono2') as HTMLSelectElement | null
+  ;['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
+    const select = document.querySelector(`#${id}`) as HTMLSelectElement | null
+    if (!select) return
 
-  const settings = {
-    'font-default': selectDefault?.value.trim() || '',
-    'font-default2': selectDefault2?.value.trim() || '',
-    'font-mono': selectMono?.value.trim() || '',
-    'font-mono2': selectMono2?.value.trim() || '',
-  }
-  saveSettings(settings)
+    const settings: { [key: string]: any } = { ...CONFIG?.get() }
+    settings[id] = select.value.trim() || ''
+    saveSettings(settings)
+  })
 }
 
 // Save switch state function
@@ -133,27 +118,15 @@ const handleSwitchToggle = (): void => {
   })
 }
 
-const handleSwitchButtonClick = () => {
-  const selectDefault = document.querySelector('#font-default') as HTMLSelectElement | null
-  const selectDefault2 = document.querySelector('#font-default2') as HTMLSelectElement | null
+// Handle switch button click function
+const handleSwitchButtonClick = (id1: string, id2: string): void => {
+  const select1 = document.querySelector(`#${id1}`) as HTMLSelectElement | null
+  const select2 = document.querySelector(`#${id2}`) as HTMLSelectElement | null
 
-  if (selectDefault && selectDefault2) {
-    const tempValue = selectDefault.value
-    selectDefault.value = selectDefault2.value
-    selectDefault2.value = tempValue
-
-    // Save the swapped values immediately
-    handleSaveSettings()
-  }
-}
-const handleSwitchButton2Click = () => {
-  const selectMono = document.querySelector('#font-mono') as HTMLSelectElement | null
-  const selectMono2 = document.querySelector('#font-mono2') as HTMLSelectElement | null
-
-  if (selectMono && selectMono2) {
-    const tempValue = selectMono.value
-    selectMono.value = selectMono2.value
-    selectMono2.value = tempValue
+  if (select1 && select2) {
+    const tempValue = select1.value
+    select1.value = select2.value
+    select2.value = tempValue
 
     // Save the swapped values immediately
     handleSaveSettings()
@@ -161,70 +134,44 @@ const handleSwitchButton2Click = () => {
 }
 
 // Handle Advanced Mode toggle function
-const handleAdvancedModeToggle = async () => {
+const handleAdvancedModeToggle = async (): Promise<void> => {
   isAdvancedMode = !isAdvancedMode
-  saveAdvancedModeState(isAdvancedMode) // Save the state to local storage
-  
-  try {
-    const fontSettings = await CONFIG?.get({
-      'font-default': '',
-      'font-default2': '',
-      'font-mono': '',
-      'font-mono2': '',
-    })
-    const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
-
-    googleFontsList.forEach((googleFont: GoogleFont) => {
-      if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
-        const fontId = 'GF-' + googleFont.fontFamily // Prefix 'GF-'
-        fontList.push({ displayName: googleFont.displayName, fontId })
-      }
-    })
-
-    fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
-
-    // add (none) option
-    fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
-
-    // Initialize isAdvancedMode from local storage
-    const storedAdvancedMode = localStorage.getItem('isAdvancedMode')
-    if (storedAdvancedMode !== null) {
-      isAdvancedMode = JSON.parse(storedAdvancedMode)
-    }
-
-    initializeSettings(fontSettings, fontList)
-  } catch (error) {
-    simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))
-  }
-}
-
-// Save Advanced Mode state function
-const saveAdvancedModeState = (state: boolean): void => {
-  localStorage.setItem('isAdvancedMode', JSON.stringify(state))
-}
-
-// Initialize settings function with font settings and font list
-const initializeSettings = (
-  fontSettings: {
-    'font-default'?: string
-    'font-default2'?: string
-    'font-mono'?: string
-    'font-mono2'?: string
-  } = {
+  localStorage.setItem('isAdvancedMode', JSON.stringify(isAdvancedMode))
+  const fontSettings = await CONFIG?.get({
     'font-default': '',
     'font-default2': '',
     'font-mono': '',
     'font-mono2': '',
-  },
+  })
+  const fontList: FontListItem[] = await chrome.fontSettings.getFontList()
+
+  googleFontsList.forEach((googleFont: GoogleFont) => {
+    if (!fontList.some((font) => font.displayName === googleFont.displayName)) {
+      const fontId = 'GF-' + googleFont.fontFamily // Prefix 'GF-'
+      fontList.push({ displayName: googleFont.displayName, fontId })
+    }
+  })
+
+  fontList.sort((a, b) => a.displayName.localeCompare(b.displayName))
+
+  // add (none) option
+  fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
+
+  initializeSettings(fontSettings, fontList)
+}
+
+// Initialize settings function with font settings and font list
+const initializeSettings = (
+  fontSettings: { [key: string]: any },
   fontList: FontListItem[] = [],
 ): void => {
-  const resetButton = html`
+  const resetButton: TemplateResult = html`
     <md-icon-button id="reset" aria-label="reset-settings" @click=${resetSettings}>
       ${ResetIcon()}
     </md-icon-button>
   `
 
-  const advancedModeCheckbox = html`
+  const advancedModeCheckbox: TemplateResult = html`
     <label style="display: flex; flex-direction: row; align-items: center;">
       <md-checkbox
         id="advancedModeCheckbox"
@@ -236,7 +183,7 @@ const initializeSettings = (
     </label>
   `
 
-  const template = html`
+  const template: TemplateResult = html`
     <div class="surface">
       <md-elevation></md-elevation>
       <div id="settings" class="settings-container">
@@ -254,64 +201,45 @@ const initializeSettings = (
             </div>
           </div>
           <!-- Additional settings items for fonts -->
-          <div class="settings__item">
-            <div class="select-label">
-              <span class="select-label__title">${tl('FONT_DEFAULT')}</span>
-              <span class="select-label__description">${tl('FONT_DEFAULT_DESCRIPTION')}</span>
-            </div>
-            <div class="settings__swap-container">
-              ${SelectComponent({
-                id: 'font-default',
-                value: fontSettings['font-default'] || '',
-                options: fontList,
-                handleChange: handleSaveSettings,
-              })}
-              ${isAdvancedMode
-                ? html`
-                    <div>
-                      <md-icon-button @click=${handleSwitchButtonClick}
-                        >${SwapIcon()}</md-icon-button
-                      >
-                    </div>
-                    ${SelectComponent({
-                      id: 'font-default2',
-                      value: fontSettings['font-default2'] || '',
-                      options: fontList,
-                      handleChange: handleSaveSettings,
-                    })}
-                  `
-                : ''}
-            </div>
-          </div>
-          <div class="settings__item">
-            <div class="select-label">
-              <span class="select-label__title">${tl('FONT_MONOSPACE')}</span>
-              <span class="select-label__description">${tl('FONT_MONOSPACE_DESCRIPTION')}</span>
-            </div>
-            <div class="settings__swap-container">
-              ${SelectComponent({
-                id: 'font-mono',
-                value: fontSettings['font-mono'] || '',
-                options: fontList,
-                handleChange: handleSaveSettings,
-              })}
-              ${isAdvancedMode
-                ? html`
-                    <div>
-                      <md-icon-button @click=${handleSwitchButton2Click}
-                        >${SwapIcon()}</md-icon-button
-                      >
-                    </div>
-                    ${SelectComponent({
-                      id: 'font-mono2',
-                      value: fontSettings['font-mono2'] || '',
-                      options: fontList,
-                      handleChange: handleSaveSettings,
-                    })}
-                  `
-                : ''}
-            </div>
-          </div>
+          ${['font-default', 'font-mono'].map(
+            (id) => html`
+              <div class="settings__item">
+                <div class="select-label">
+                  <span class="select-label__title"
+                    >${id === 'font-default' ? tl('FONT_DEFAULT') : tl('FONT_MONOSPACE')}</span
+                  >
+                  <span class="select-label__description"
+                    >${id === 'font-default'
+                      ? tl('FONT_DEFAULT_DESCRIPTION')
+                      : tl('FONT_MONOSPACE_DESCRIPTION')}</span
+                  >
+                </div>
+                <div class="settings__swap-container">
+                  ${SelectComponent({
+                    id,
+                    value: fontSettings[id] || '',
+                    options: fontList,
+                    handleChange: handleSaveSettings,
+                  })}
+                  ${isAdvancedMode
+                    ? html`
+                        <div>
+                          <md-icon-button @click=${() => handleSwitchButtonClick(id, id + '2')}
+                            >${SwapIcon()}</md-icon-button
+                          >
+                        </div>
+                        ${SelectComponent({
+                          id: id + '2',
+                          value: fontSettings[id + '2'] || '',
+                          options: fontList,
+                          handleChange: handleSaveSettings,
+                        })}
+                      `
+                    : ''}
+                </div>
+              </div>
+            `,
+          )}
           <div class="settings__item">${advancedModeCheckbox}</div>
         </section>
       </div>

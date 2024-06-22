@@ -7,7 +7,6 @@
 - https://www.30secondsofcode.org/js/s/inject-css/
 - https://material.io/blog/migrating-material-3
 */
-
 import { Message } from "@types";
 import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fontUtils'
 ;(async () => {

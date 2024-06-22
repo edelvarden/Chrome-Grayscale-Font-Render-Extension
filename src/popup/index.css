@@ -41,7 +41,6 @@ body {
   margin-top: 21px;
   background-color: var(--md-sys-color-surface-container);
   overflow: hidden;
-  padding-bottom: 10px;
 }
 
 .settings__title {

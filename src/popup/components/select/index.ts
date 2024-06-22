@@ -4,7 +4,7 @@ import './select.css'
 
 interface SelectComponentProps {
   id: string
-  value?: string | null
+  value?: string | undefined
   options: SelectOption[]
   handleChange: (event: Event) => void
 }
