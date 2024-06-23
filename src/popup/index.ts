@@ -9,8 +9,8 @@ import { init, tl } from '@utils/localize'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
 import { simpleErrorHandler } from '@utils/stringUtils'
 import { TemplateResult, html, render } from 'lit'
-import './components/icons/ResetIcon'
-import './components/icons/SwapIcon'
+import './components/icons/reset-icon'
+import './components/icons/swap-icon'
 import './components/select'
 import './index.css'
 
@@ -190,7 +190,12 @@ const initializeSettings = (
   fontList: FontListItem[] = [],
 ): void => {
   const resetButton: TemplateResult = html`
-    <md-icon-button id="reset" aria-label="reset-settings" @click=${resetSettings}>
+    <md-icon-button
+      id="reset"
+      title="Reset settings"
+      aria-label="reset-settings"
+      @click=${resetSettings}
+    >
       <reset-icon />
     </md-icon-button>
   `
@@ -220,7 +225,7 @@ const initializeSettings = (
             <div class="settings__controls">
               ${resetButton}
               <label>
-                <md-switch id="switch" selected @input=${handleSwitchToggle}></md-switch>
+                <md-switch id="switch" ?selected=${isOn} @input=${handleSwitchToggle}></md-switch>
               </label>
             </div>
           </div>

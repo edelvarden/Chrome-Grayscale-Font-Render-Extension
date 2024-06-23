@@ -151,7 +151,7 @@ export const invokeReplacer = () => {
   replaceFonts(elements)
 }
 
-const debouncedReplacer = debounceWithFirstCall(invokeReplacer, 300)
+const debouncedReplacer = debounceWithFirstCall(invokeReplacer, 200)
 
 export const invokeObserver = (): void => {
   const observerOptions = { childList: true, subtree: true }
