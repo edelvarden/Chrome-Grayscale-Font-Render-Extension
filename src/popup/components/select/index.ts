@@ -21,7 +21,7 @@ export class SelectComponent extends LitElement {
   }
 
   static styles = css`
-    .select {
+    .md-select {
       --md-arrow-width: 10px;
       --md-select-bg-color: var(--md-sys-color-surface);
       --md-select-option-bg-color: var(--md-sys-color-surface-container);
@@ -31,11 +31,11 @@ export class SelectComponent extends LitElement {
       --md-select-width: 180px;
     }
 
-    .select {
+    .md-select {
       margin-left: auto;
       appearance: none;
-      background: var(--select-arrow-icon) calc(100% - var(--md-select-side-padding))
-        center no-repeat;
+      background: var(--md-select-arrow-icon) calc(100% - var(--md-select-side-padding)) center
+        no-repeat;
       background-color: var(--md-select-bg-color);
       background-size: var(--md-arrow-width);
       border: none;
@@ -53,16 +53,20 @@ export class SelectComponent extends LitElement {
       width: var(--md-select-width, 200px);
     }
 
-    .select option {
+    .md-select option {
       background-color: var(--md-select-option-bg-color);
     }
 
-    .select {
+    .md-select option[data-google-font] {
+      color: var(--md-sys-color-primary);
+    }
+
+    .md-select {
       outline: 3px solid transparent;
       outline-offset: -1px;
     }
 
-    .select:focus {
+    .md-select:focus {
       outline-color: var(--md-focus-ring-color);
     }
   `
@@ -72,13 +76,17 @@ export class SelectComponent extends LitElement {
       <div style="position: relative">
         <select
           id="${this.id}"
-          class="select"
-          @change=${this.handleChange}
+          class="md-select"
           .value="${this.value ?? ''}"
+          @change=${this.handleChange}
         >
           ${this.options.map(
             (option) =>
-              html`<option value="${option.fontId}" ?selected=${option.fontId === this.value}>
+              html`<option
+                value="${option.fontId}"
+                ?data-google-font=${option.fontId.startsWith('GF-')}
+                ?selected=${option.fontId === this.value}
+              >
                 ${option.displayName}
               </option>`,
           )}

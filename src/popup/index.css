@@ -6,7 +6,7 @@
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --serif-font: 'Georgia', 'Times New Roman', 'Times', serif, 'Apple Color Emoji', 'Segoe UI Emoji',
     'Segoe UI Symbol', 'Noto Color Emoji';
-  --select-arrow-icon: url('../assets/arrow_down.svg');
+  --md-select-arrow-icon: url('../assets/arrow_down.svg');
 }
 
 html {

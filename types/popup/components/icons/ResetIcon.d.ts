@@ -1,1 +1,4 @@
-export default function ResetIcon(): import("lit").TemplateResult<1>;
+import { LitElement } from 'lit'
+export declare class ResetIcon extends LitElement {
+  render(): import('lit').TemplateResult<1>
+}

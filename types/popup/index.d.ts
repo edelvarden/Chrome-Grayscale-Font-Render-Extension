@@ -1,6 +1,8 @@
-import '@material/web/checkbox/checkbox';
-import '@material/web/elevation/elevation';
-import '@material/web/iconbutton/icon-button';
-import '@material/web/switch/switch';
-import '@utils/localize';
-import './index.css';
+import '@material/web/checkbox/checkbox'
+import '@material/web/elevation/elevation'
+import '@material/web/iconbutton/icon-button'
+import '@material/web/switch/switch'
+import './components/icons/ResetIcon'
+import './components/icons/SwapIcon'
+import './components/select'
+import './index.css'

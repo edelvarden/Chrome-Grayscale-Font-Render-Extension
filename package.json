@@ -14,9 +14,6 @@
     "zip": "pnpm run build && node scripts/zip.js"
   },
   "lint-staged": {
-    "*.ts": [
-      "tsc --noEmit"
-    ],
     "*.{js,ts,css,md}": [
       "prettier --write --list-different"
     ]

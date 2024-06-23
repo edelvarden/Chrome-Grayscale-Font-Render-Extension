@@ -178,7 +178,7 @@ const swapSelectValues = (id1: string, id2: string): void => {
   const select1 = $(`#${id1}`) as HTMLSelectElement
   const select2 = $(`#${id2}`) as HTMLSelectElement
 
-  if (select1 && select2) {
+  if (select1 && select2 && select1.value !== select2.value) {
     const tempValue = select1.value
     select1.value = select2.value
     select2.value = tempValue

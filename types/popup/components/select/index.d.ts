@@ -1,11 +1,10 @@
-import { SelectOption } from '@types';
-import { TemplateResult } from 'lit';
-import './select.css';
-interface SelectComponentProps {
-    id: string;
-    value?: string | undefined;
-    options: SelectOption[];
-    handleChange: (event: Event) => void;
+import { SelectOption } from '@types'
+import { LitElement } from 'lit'
+export declare class SelectComponent extends LitElement {
+  id: string
+  value?: string
+  options: SelectOption[]
+  private handleChange
+  static styles: import('lit').CSSResult
+  render(): import('lit').TemplateResult<1>
 }
-export default function SelectComponent(props: SelectComponentProps): TemplateResult;
-export {};
