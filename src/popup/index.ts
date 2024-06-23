@@ -5,13 +5,13 @@ import '@material/web/switch/switch'
 import { FontListItem, GoogleFont, Message } from '@types'
 import { googleFontsList } from '@utils/constants'
 import { $ } from '@utils/domUtils'
-import { tl, init } from '@utils/localize'
+import { init, tl } from '@utils/localize'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
 import { simpleErrorHandler } from '@utils/stringUtils'
 import { TemplateResult, html, render } from 'lit'
-import ResetIcon from './components/icons/ResetIcon'
-import SwapIcon from './components/icons/SwapIcon'
-import SelectComponent from './components/select'
+import './components/icons/ResetIcon'
+import './components/icons/SwapIcon'
+import './components/select'
 import './index.css'
 
 // Define types for variables
@@ -191,7 +191,7 @@ const initializeSettings = (
 ): void => {
   const resetButton: TemplateResult = html`
     <md-icon-button id="reset" aria-label="reset-settings" @click=${resetSettings}>
-      ${ResetIcon()}
+      <reset-icon />
     </md-icon-button>
   `
 
@@ -239,25 +239,25 @@ const initializeSettings = (
                   </span>
                 </div>
                 <div class="settings__swap-container">
-                  ${SelectComponent({
-                    id,
-                    value: fontSettings[id as keyof Settings] || '',
-                    options: id === 'font-default' ? optionsWithNone : fontList,
-                    handleChange: handleSaveSettings,
-                  })}
+                  <select-component
+                    id="${id}"
+                    .value="${fontSettings[id as keyof Settings] || ''}"
+                    .options="${id === 'font-default' ? optionsWithNone : fontList}"
+                    @change="${handleSaveSettings}"
+                  ></select-component>
                   ${isAdvancedMode
                     ? html`
                         <div>
                           <md-icon-button @click=${() => handleSwitchButtonClick(id, `${id}2`)}>
-                            ${SwapIcon()}
+                            <swap-icon />
                           </md-icon-button>
                         </div>
-                        ${SelectComponent({
-                          id: `${id}2`,
-                          value: fontSettings[`${id}2` as keyof Settings] || '',
-                          options: id === 'font-default' ? optionsWithNone : fontList,
-                          handleChange: handleSaveSettings,
-                        })}
+                        <select-component
+                          id="${id}2"
+                          .value="${fontSettings[`${id}2` as keyof Settings] || ''}"
+                          .options="${id === 'font-default' ? optionsWithNone : fontList}"
+                          @change="${handleSaveSettings}"
+                        ></select-component>
                       `
                     : ''}
                 </div>
