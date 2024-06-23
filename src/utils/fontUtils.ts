@@ -9,6 +9,8 @@ import { memo } from './memo'
 const SANS_CLASS = addHashSuffix('sans')
 const MONOSPACE_CLASS = addHashSuffix('monospace')
 const STYLE_TAG_ID = addHashSuffix('style')
+let isSansFont = false
+let isMonospaceFont = false
 
 // Excluded tags for font replacement
 const EXCLUDED_TAGS: string[] = [
@@ -129,12 +131,12 @@ const replaceFont = (element: HTMLElement): boolean => {
     return false
   }
 
-  if (/monospace/.test(fontFamily)) {
+  if (isMonospaceFont && /monospace/.test(fontFamily)) {
     element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
     return true
   }
 
-  if (/sans-serif|serif/.test(fontFamily)) {
+  if (isSansFont && /sans-serif|serif/.test(fontFamily)) {
     element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
     return true
   }
@@ -151,7 +153,7 @@ export const invokeReplacer = () => {
   replaceFonts(elements)
 }
 
-const debouncedReplacer = debounceWithFirstCall(invokeReplacer, 200)
+const debouncedReplacer = debounceWithFirstCall(() => invokeReplacer(), 200)
 
 export const invokeObserver = (): void => {
   const observerOptions = { childList: true, subtree: true }
@@ -179,8 +181,8 @@ export const preview = async (): Promise<void> => {
 export const init = (settings: { 'font-default': string; 'font-mono': string }): void => {
   let { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
 
-  const isSansFont = sansFont && sansFont.length > 0
-  let isMonospaceFont = monospaceFont && monospaceFont.length > 0
+  isSansFont = sansFont?.length > 0
+  isMonospaceFont = monospaceFont?.length > 0
 
   if (!monospaceFont) {
     monospaceFont = 'monospace'

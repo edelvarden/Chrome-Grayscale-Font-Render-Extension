@@ -98,11 +98,7 @@ const resetSelectValues = async (): Promise<void> => {
   for (const id of selectIds) {
     const select = $(`#${id}`) as HTMLSelectElement
     if (select) {
-      if (id === 'font-mono' || id === 'font-mono2') {
-        select.value = await getBrowserFixedFont()
-      } else {
-        select.value = ''
-      }
+      select.value = ''
     }
   }
 }
@@ -149,15 +145,6 @@ const getConfigSettings = async (): Promise<Partial<Settings>> => {
     'font-mono': '',
     'font-mono2': '',
   })) as Partial<Settings>
-
-  const fixedFont = await getBrowserFixedFont()
-
-  if (!settings['font-mono']) {
-    settings['font-mono'] = fixedFont
-  }
-  if (!settings['font-mono2']) {
-    settings['font-mono2'] = fixedFont
-  }
 
   return settings
 }
@@ -212,8 +199,8 @@ const initializeSettings = (
     </label>
   `
 
-  const optionsWithNone = fontList
-  optionsWithNone.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
+  // Add (none) option
+  fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
 
   const template: TemplateResult = html`
     <div class="surface">
@@ -235,7 +222,6 @@ const initializeSettings = (
                 <div class="select-label">
                   <span class="select-label__title">
                     ${id === 'font-default' ? tl('FONT_DEFAULT') : tl('FONT_MONOSPACE')}
-                    ${id === 'font-mono' ? html`<span class="important-mark">*</span>` : ''}
                   </span>
                   <span class="select-label__description">
                     ${id === 'font-default'
@@ -247,7 +233,7 @@ const initializeSettings = (
                   <select-component
                     id="${id}"
                     .value="${fontSettings[id as keyof Settings] || ''}"
-                    .options="${id === 'font-default' ? optionsWithNone : fontList}"
+                    .options="${fontList}"
                     @change="${handleSaveSettings}"
                   ></select-component>
                   ${isAdvancedMode
@@ -260,7 +246,7 @@ const initializeSettings = (
                         <select-component
                           id="${id}2"
                           .value="${fontSettings[`${id}2` as keyof Settings] || ''}"
-                          .options="${id === 'font-default' ? optionsWithNone : fontList}"
+                          .options="${fontList}"
                           @change="${handleSaveSettings}"
                         ></select-component>
                       `
@@ -281,17 +267,6 @@ const initializeSettings = (
   } else {
     console.error('Main element not found!')
   }
-}
-
-const getBrowserFixedFont = async (): Promise<string> => {
-  let fixedFont = ''
-  try {
-    const details = await chrome.fontSettings.getFont({ genericFamily: 'fixed' })
-    fixedFont = details.fontId
-  } catch (error) {
-    console.error('Error getting fixed font:', error)
-  }
-  return fixedFont
 }
 
 // Add event listener to load event
