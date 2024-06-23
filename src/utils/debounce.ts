@@ -24,6 +24,7 @@ export const debounce = (func: DebounceFunction, delay: number): DebounceFunctio
  */
 export const debounceWithFirstCall = (func: DebounceFunction, delay: number): DebounceFunction => {
   let calledFirstTime = false
+  const debouncedFunc = debounce(func, delay)
 
   return (...args: any[]) => {
     if (!calledFirstTime) {
@@ -32,9 +33,7 @@ export const debounceWithFirstCall = (func: DebounceFunction, delay: number): De
       calledFirstTime = true
       return
     }
-
     // Use the classic debounce function for subsequent calls
-    const debouncedFunc = debounce(func, delay)
     debouncedFunc(...args)
   }
 }
