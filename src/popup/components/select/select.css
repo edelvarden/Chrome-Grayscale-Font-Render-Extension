@@ -11,8 +11,8 @@
 .select {
   margin-left: auto;
   appearance: none;
-  background: url('../../../assets/arrow_down.svg') calc(100% - var(--md-select-side-padding)) center
-    no-repeat;
+  background: url('../../../assets/arrow_down.svg') calc(100% - var(--md-select-side-padding))
+    center no-repeat;
   background-color: var(--md-select-bg-color);
   background-size: var(--md-arrow-width);
   border: none;

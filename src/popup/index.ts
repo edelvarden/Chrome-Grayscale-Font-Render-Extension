@@ -4,9 +4,10 @@ import '@material/web/iconbutton/icon-button'
 import '@material/web/switch/switch'
 import { FontListItem, GoogleFont, Message } from '@types'
 import { googleFontsList } from '@utils/constants'
-import '@utils/localize'
+import { $ } from '@utils/domUtils'
+import { tl, init } from '@utils/localize'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
-import { simpleErrorHandler, tl } from '@utils/stringUtils'
+import { simpleErrorHandler } from '@utils/stringUtils'
 import { TemplateResult, html, render } from 'lit'
 import ResetIcon from './components/icons/ResetIcon'
 import SwapIcon from './components/icons/SwapIcon'
@@ -75,7 +76,7 @@ const getSwitchState = async (): Promise<boolean | undefined> => {
 const handleSaveSettings = (): void => {
   const settings: any = { ...CONFIG?.get() }
   ;['font-default', 'font-default2', 'font-mono', 'font-mono2'].forEach((id) => {
-    const select = document.querySelector<HTMLSelectElement>(`#${id}`)
+    const select = $(`#${id}`) as HTMLSelectElement
     if (select) settings[id as keyof Settings] = select.value.trim() || ''
   })
   saveSettings(settings)
@@ -95,7 +96,7 @@ const resetSelectValues = async (): Promise<void> => {
   const selectIds = ['font-default', 'font-default2', 'font-mono', 'font-mono2']
 
   for (const id of selectIds) {
-    const select = document.querySelector<HTMLSelectElement>(`#${id}`)
+    const select = $(`#${id}`) as HTMLSelectElement
     if (select) {
       if (id === 'font-mono' || id === 'font-mono2') {
         select.value = await getBrowserFixedFont()
@@ -110,14 +111,14 @@ const resetSelectValues = async (): Promise<void> => {
 const initializeSwitchState = async (): Promise<void> => {
   const switchState = await getSwitchState()
   isOn = switchState !== false
-  const switchElement = document.querySelector<HTMLInputElement>('#switch')
+  const switchElement = $('#switch') as HTMLInputElement
   if (switchElement) switchElement.checked = isOn
 }
 
 const handleSwitchToggle = (): void => {
   isOn = !isOn
   saveSwitchState(isOn)
-  const switchElement = document.querySelector<HTMLInputElement>('#switch')
+  const switchElement = $('#switch') as HTMLInputElement
   LOCAL_CONFIG?.set({ off: !isOn }, () => {
     if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE'))) {
       if (switchElement) switchElement.classList.toggle('on', isOn)
@@ -174,8 +175,8 @@ const updateFontList = async (): Promise<FontListItem[]> => {
 }
 
 const swapSelectValues = (id1: string, id2: string): void => {
-  const select1 = document.querySelector<HTMLSelectElement>(`#${id1}`)
-  const select2 = document.querySelector<HTMLSelectElement>(`#${id2}`)
+  const select1 = $(`#${id1}`) as HTMLSelectElement
+  const select2 = $(`#${id2}`) as HTMLSelectElement
 
   if (select1 && select2) {
     const tempValue = select1.value
@@ -206,7 +207,7 @@ const initializeSettings = (
     </label>
   `
 
-  const optionsWithNone = fontList;
+  const optionsWithNone = fontList
   optionsWithNone.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
 
   const template: TemplateResult = html`
@@ -224,7 +225,6 @@ const initializeSettings = (
             </div>
           </div>
           ${['font-default', 'font-mono'].map((id) => {
-
             return html`
               <div class="settings__item">
                 <div class="select-label">
@@ -270,7 +270,7 @@ const initializeSettings = (
     </div>
   `
 
-  const mainElement = document.querySelector('main')
+  const mainElement = $('main') as HTMLElement
   if (mainElement) {
     render(template, mainElement)
   } else {
@@ -291,6 +291,7 @@ const getBrowserFixedFont = async (): Promise<string> => {
 
 // Add event listener to load event
 window.addEventListener('load', async () => {
+  init()
   try {
     const fontSettings = await getConfigSettings()
     const fontList = await updateFontList()

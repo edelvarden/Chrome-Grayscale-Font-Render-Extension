@@ -1,2 +1,2 @@
-import { GoogleFont } from "@types";
+import { GoogleFont } from '@types';
 export declare const googleFontsList: GoogleFont[];

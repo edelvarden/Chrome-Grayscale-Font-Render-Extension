@@ -1,8 +1,9 @@
-import { $$$ } from '@utils/domUtils'
+import { $, $$, $$$ } from '@utils/domUtils'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
-import { addHashSuffix, fixName, simpleErrorHandler, tl } from '@utils/stringUtils'
-import { debounce } from './debounce'
-import { memo } from "./memo"
+import { addHashSuffix, fixName, simpleErrorHandler } from '@utils/stringUtils'
+import { debounceWithFirstCall } from './debounce'
+import { tl } from './localize'
+import { memo } from './memo'
 
 // Constants with unique class names
 const SANS_CLASS = addHashSuffix('sans')
@@ -30,14 +31,14 @@ export const cleanupStyles = (): void => {
 }
 
 const toggleStyleTag = (styleId: string, enable: boolean): void => {
-  const styleTag: any = document.getElementById(styleId)
+  const styleTag: any = $(`#${styleId}`)
   if (styleTag) {
     styleTag.disabled = !enable
   }
 }
 
 const createOrUpdateStyleTag = (id: string, content: string): void => {
-  let styleTag: any = document.getElementById(id)
+  let styleTag: any = $(`#${id}`)
   if (styleTag) {
     styleTag.innerHTML = content
     styleTag.disabled = false
@@ -146,11 +147,11 @@ const replaceFonts = (elements: NodeListOf<HTMLElement>): void => {
 }
 
 export const invokeReplacer = () => {
-  const elements = document.querySelectorAll('*') as NodeListOf<HTMLElement>
+  const elements = $$('body *') as NodeListOf<HTMLElement>
   replaceFonts(elements)
 }
 
-const debouncedReplacer = debounce(invokeReplacer, 200)
+const debouncedReplacer = debounceWithFirstCall(invokeReplacer, 300)
 
 export const invokeObserver = (): void => {
   const observerOptions = { childList: true, subtree: true }
@@ -198,16 +199,21 @@ export const init = (settings: { 'font-default': string; 'font-mono': string }):
 
   createOrUpdateStyleTag(STYLE_TAG_ID, cssRules + classContent)
 
-  document.documentElement.style.setProperty(
-    'font-family',
-    isSansFont ? `var(--${SANS_CLASS})` : '',
-    'important',
-  )
-  document.body.style.setProperty(
-    'font-family',
-    isSansFont ? `var(--${SANS_CLASS})` : '',
-    'important',
-  )
+  if (isSansFont) {
+    document.documentElement.style.setProperty(
+      'font-family',
+      isSansFont ? `var(--${SANS_CLASS})` : '',
+      'important',
+    )
+    document.body.style.setProperty(
+      'font-family',
+      isSansFont ? `var(--${SANS_CLASS})` : '',
+      'important',
+    )
+  } else {
+    document.documentElement.style.removeProperty('font-family')
+    document.body.style.removeProperty('font-family')
+  }
 }
 
 // Helper function to check if a font is a Google font

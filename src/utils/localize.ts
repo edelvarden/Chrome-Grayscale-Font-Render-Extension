@@ -1,7 +1,9 @@
+import { $$ } from "./domUtils"
+
 type GetMessageArgs = string | string[] | undefined
 
-const getMessage = (messageName: string, args?: GetMessageArgs): string => {
-  return chrome.i18n.getMessage(messageName, args)
+export const tl = (message: string, args: GetMessageArgs = []): string => {
+  return chrome.i18n.getMessage(message, args)
 }
 
 const onDocumentReady = (callback: () => void): void => {
@@ -12,45 +14,43 @@ const onDocumentReady = (callback: () => void): void => {
   }
 }
 
-const querySelectorAll = <T extends Element>(selectors: string): NodeListOf<T> => {
-  return document.querySelectorAll(selectors)
-}
-
 const processI18nElements = (): void => {
-  const elements = querySelectorAll<HTMLElement>('[i18n]')
+  const elements = $$('[i18n]')
   elements.forEach((element) => {
     const key = element.getAttribute('i18n')
     if (key) {
-      element.innerHTML = getMessage(key)
+      element.innerHTML = tl(key)
       element.removeAttribute('i18n')
     }
   })
 }
 
 const processI18nTitleElements = (): void => {
-  const elements = querySelectorAll<HTMLElement>('[i18n_title]')
+  const elements = $$('[i18n_title]')
   elements.forEach((element) => {
     const key = element.getAttribute('i18n_title')
     if (key) {
-      element.setAttribute('title', getMessage(key))
+      element.setAttribute('title', tl(key))
       element.removeAttribute('i18n_title')
     }
   })
 }
 
 const processI18nValueElements = (): void => {
-  const elements = querySelectorAll<HTMLInputElement>('[i18n_value]')
+  const elements = $$('[i18n_value]')
   elements.forEach((element) => {
     const key = element.getAttribute('i18n_value')
     if (key) {
-      element.setAttribute('value', getMessage(key))
+      element.setAttribute('value', tl(key))
       element.removeAttribute('i18n_value')
     }
   })
 }
 
-onDocumentReady(() => {
-  processI18nElements()
-  processI18nTitleElements()
-  processI18nValueElements()
-})
+export const init = () => {
+  onDocumentReady(() => {
+    processI18nElements()
+    processI18nTitleElements()
+    processI18nValueElements()
+  }) 
+}

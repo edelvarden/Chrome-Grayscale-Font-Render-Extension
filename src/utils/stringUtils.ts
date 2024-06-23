@@ -1,9 +1,3 @@
-type GetMessageArgs = string | string[]
-
-export const tl = (message: string, args: GetMessageArgs = []): string => {
-  return chrome.i18n.getMessage(message, args)
-}
-
 const isErrorOccurred = (): boolean => {
   if (chrome.runtime.lastError) {
     console.error('❌ ERROR:', chrome.runtime.lastError.message)

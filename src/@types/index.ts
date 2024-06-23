@@ -1,9 +1,8 @@
 export interface FontListItem {
-  fontId: string;
+  fontId: string
   displayName: string
   isGoogleFont?: boolean
 }
-
 
 export interface GoogleFont {
   fontFamily: string

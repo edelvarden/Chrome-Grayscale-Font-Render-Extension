@@ -1,4 +1,4 @@
-import { GoogleFont } from "@types";
+import { GoogleFont } from '@types'
 
 export const googleFontsList: GoogleFont[] = [
   // sans-serif
