@@ -13,20 +13,17 @@ export declare const $: (selector: string, context?: Document | Element) => Elem
  */
 export declare const $$: (selector: string, context?: Document | Element) => NodeListOf<Element>
 type Attributes = Record<string, any>
-type CustomAttributes = Record<string, string>
 type CSSStyles = Record<string, string>
 /**
  * Creates an HTML element with the specified attributes, custom attributes, and styles.
  * @param {string} tag The tag name of the HTML element to create.
  * @param {Attributes} [attributes={}] Standard attributes to assign to the element.
- * @param {CustomAttributes} [customAttributes={}] Custom attributes to assign to the element.
  * @param {CSSStyles} [css={}] CSS styles to assign to the element.
+ * @example
+ * $$$('div', { id: 'div-id', class: 'div-class', 'data-custom': 'value' }, { backgroundColor: 'red' })
+ * @example
+ * $$$('style', { innerHTML: '*{color: red;}', id: 'style_id1' })
  * @returns {HTMLElement} The created HTML element.
  */
-export declare const $$$: (
-  tag: string,
-  attributes?: Attributes,
-  customAttributes?: CustomAttributes,
-  css?: CSSStyles,
-) => HTMLElement
+export declare const $$$: (tag: string, attributes?: Attributes, css?: CSSStyles) => HTMLElement
 export {}

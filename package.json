@@ -8,9 +8,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "pnpm test && tsc && vite build",
     "preview": "vite preview",
-    "fmt": "prettier --write 'src/**/*.{ts,js,json,css,scss,md}'",
+    "fmt": "prettier --write \"src/**/*.{ts,js,json,css,md}\"",
     "zip": "pnpm run build && node scripts/zip.js",
     "test": "jest"
   },
