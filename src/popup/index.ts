@@ -7,7 +7,6 @@ import { googleFontsList } from '@utils/constants'
 import { $ } from '@utils/domUtils'
 import { init, tl } from '@utils/localize'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
-import { simpleErrorHandler } from '@utils/stringUtils'
 import { TemplateResult, html, render } from 'lit'
 import './components/icons/reset-icon'
 import './components/icons/swap-icon'
@@ -47,7 +46,7 @@ const removeEffect = () => sendMessageToContentScript({ action: 'executeCleanup'
 // Storage functions
 const saveSettings = (settings: Partial<Settings>): void => {
   CONFIG?.set(settings, () => {
-    if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE')) && isOn) startPreview()
+    if (isOn) startPreview()
   })
 }
 
@@ -55,7 +54,7 @@ const saveSwitchState = async (state: boolean): Promise<void> => {
   const currentTab = await queryActiveTab()
   if (currentTab) {
     const storageKey = `switch_state_${currentTab.url}`
-    chrome.storage.sync.set({ [storageKey]: state })
+    CONFIG?.set({ [storageKey]: state })
   }
 }
 
@@ -64,7 +63,7 @@ const getSwitchState = async (): Promise<boolean | undefined> => {
   if (currentTab) {
     const storageKey = `switch_state_${currentTab.url}`
     return new Promise((resolve) => {
-      chrome.storage.sync.get([storageKey], (result) => {
+      CONFIG?.get([storageKey], (result) => {
         resolve(result[storageKey])
       })
     })
@@ -84,7 +83,6 @@ const handleSaveSettings = (): void => {
 
 const resetSettings = (): void => {
   CONFIG?.clear(() => {
-    simpleErrorHandler(tl('ERROR_SETTINGS_RESET'))
     removeEffect()
     resetSelectValues()
     if (!isOn) handleSwitchToggle()
@@ -116,11 +114,9 @@ const handleSwitchToggle = (): void => {
   saveSwitchState(isOn)
   const switchElement = $('#switch') as HTMLInputElement
   LOCAL_CONFIG?.set({ off: !isOn }, () => {
-    if (!simpleErrorHandler(tl('ERROR_SETTINGS_SAVE'))) {
-      if (switchElement) switchElement.classList.toggle('on', isOn)
-      if (isOn) startPreview()
-      else removeEffect()
-    }
+    if (switchElement) switchElement.classList.toggle('on', isOn)
+    if (isOn) startPreview()
+    else removeEffect()
   })
 }
 
@@ -283,6 +279,6 @@ window.addEventListener('load', async () => {
 
     initializeSettings(fontSettings, fontList)
   } catch (error) {
-    simpleErrorHandler(tl('ERROR_SETTINGS_LOAD'))
+    console.error('❌ ERROR:', error)
   }
 })

@@ -15,7 +15,7 @@
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": false,
-    "types": ["chrome"],
+    "types": ["chrome", "jest"],
 
     /* Linting */
     "strict": true,
@@ -33,6 +33,6 @@
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/manifest.ts"],
+  "exclude": ["src/manifest.ts", "src/**/*.test.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -8,25 +8,15 @@
 - https://material.io/blog/migrating-material-3
 */
 import { Message } from '@types'
-import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fontUtils'
+import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fontManager'
 ;(async () => {
   await preview()
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    invokeReplacer()
-  })
+  const navigationEvents = ['popstate', 'pushState', 'replaceState', 'pageshow']
 
-  window.addEventListener('popstate', async () => {
-    await preview()
-  })
+  navigationEvents.forEach((event) => window.addEventListener(event, async () => await preview()))
 
-  window.addEventListener('pushState', async () => {
-    await preview()
-  })
-
-  window.addEventListener('replaceState', async () => {
-    await preview()
-  })
+  document.addEventListener('DOMContentLoaded', invokeReplacer)
 
   invokeObserver()
 
@@ -43,12 +33,4 @@ import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils
         break
     }
   })
-
-  // chrome.storage.onChanged.addListener(
-  //   async (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
-  //     if (area === 'sync' && (changes['font-default'] || changes['font-mono'])) {
-  //       await preview()
-  //     }
-  //   },
-  // )
 })()

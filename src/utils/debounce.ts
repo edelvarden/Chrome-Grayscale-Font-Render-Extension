@@ -7,9 +7,9 @@ type DebounceFunction = (...args: any[]) => void
  * @returns Debounced function
  */
 export const debounce = (func: DebounceFunction, delay: number): DebounceFunction => {
-  let timer: number
+  let timer: number | undefined
   return (...args: any[]) => {
-    clearTimeout(timer)
+    if (timer) clearTimeout(timer)
     timer = window.setTimeout(() => {
       func(...args)
     }, delay)
@@ -23,17 +23,15 @@ export const debounce = (func: DebounceFunction, delay: number): DebounceFunctio
  * @returns Debounced function with immediate first call
  */
 export const debounceWithFirstCall = (func: DebounceFunction, delay: number): DebounceFunction => {
-  let calledFirstTime = false
+  let isFirstCall = true
   const debouncedFunc = debounce(func, delay)
 
   return (...args: any[]) => {
-    if (!calledFirstTime) {
-      // Execute the function immediately for the first call
+    if (isFirstCall) {
       func(...args)
-      calledFirstTime = true
-      return
+      isFirstCall = false
+    } else {
+      debouncedFunc(...args)
     }
-    // Use the classic debounce function for subsequent calls
-    debouncedFunc(...args)
   }
 }
