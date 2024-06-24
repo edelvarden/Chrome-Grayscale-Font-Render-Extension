@@ -39,7 +39,18 @@ type CSSStyles = Record<string, string>
 export const $$$ = (tag: string, attributes: Attributes = {}, css: CSSStyles = {}): HTMLElement => {
   const element = document.createElement(tag)
 
-  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value))
+  Object.entries(attributes).forEach(([key, value]) => {
+    if (key === 'innerHTML') {
+      element.innerHTML = value
+    } else if (key === 'innerText') {
+      element.innerText = value
+    } else if (key === 'textContent') {
+      element.textContent = value
+    } else {
+      element.setAttribute(key, value)
+    }
+  })
+
   Object.assign(element.style, css)
 
   return element

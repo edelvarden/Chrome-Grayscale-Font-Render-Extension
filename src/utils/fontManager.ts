@@ -1,8 +1,8 @@
+import { debounceWithFirstCall } from './debounce'
 import { $, $$, $$$ } from './domUtils'
+import { memo } from './memo'
 import { CONFIG, LOCAL_CONFIG } from './storage'
 import { addHashSuffix, fixName } from './stringUtils'
-import { debounceWithFirstCall } from './debounce'
-import { memo } from './memo'
 
 // Constants with unique names
 const SANS_CLASS = addHashSuffix('sans')
