@@ -2,13 +2,8 @@
  * @jest-environment jsdom
  */
 
-import { $, $$, $$$ } from '../domUtils'
-import {
-  createOrUpdateStyleTag,
-  invokeObserver,
-  invokeReplacer,
-  toggleStyleTag,
-} from '../fontManager'
+import { $, $$$ } from '../domUtils'
+import { createOrUpdateStyleTag, toggleStyleTag } from '../fontManager'
 
 jest.mock('../storage', () => ({
   CONFIG: {
@@ -86,26 +81,6 @@ describe('Font Manager Function Tests', () => {
       let styleTag = $('#style_empty') as HTMLStyleElement
       expect(styleTag).toBeDefined()
       expect(styleTag.innerHTML).toBe('')
-    })
-  })
-
-  describe('invokeReplacer', () => {
-    it('should replace fonts of elements', () => {
-      const element = document.querySelector('#test') as HTMLElement
-      element.style.fontFamily = 'Arial, sans-serif'
-      const elements = $$('body *') as NodeListOf<HTMLElement>
-
-      invokeReplacer()
-      expect(elements.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe('invokeObserver', () => {
-    it('should start observing the document for changes', () => {
-      const observerSpy = jest.spyOn(MutationObserver.prototype, 'observe')
-      invokeObserver()
-      expect(observerSpy).toHaveBeenCalled()
-      observerSpy.mockRestore()
     })
   })
 })

@@ -1,5 +1,4 @@
-import { debounceWithFirstCall } from './debounce'
-import { $, $$, $$$ } from './domUtils'
+import { $, $$$ } from './domUtils'
 import { memo } from './memo'
 import { CONFIG, LOCAL_CONFIG } from './storage'
 import { addHashSuffix, fixName } from './stringUtils'
@@ -12,28 +11,18 @@ const STYLE_TAG_ID = addHashSuffix('style')
 let isSansFont = false
 let isMonospaceFont = false
 
-// Excluded tags for font replacement
-const EXCLUDED_TAGS: string[] = [
-  'i',
-  'mat-icon',
-  'gf-load-icon-font',
-  'textarea',
-  'span',
-  'div',
-  'button',
-  'li',
-  'a',
-  'code',
-  'pre',
-]
-
-// Cleanup styles
+/**
+ * Disables the style tag and removes inline styles
+ */
 export const cleanupStyles = (): void => {
   toggleStyleTag(STYLE_TAG_ID, false)
-  document.documentElement.style.removeProperty('font-family')
-  document.body.style.removeProperty('font-family')
+  removeInlineStyle(document.documentElement)
+  removeInlineStyle(document.body)
 }
 
+/**
+ * Toggles the enabled state of the style tag
+ */
 export const toggleStyleTag = (styleId: string, enable: boolean): void => {
   const styleTag = $(`#${styleId}`) as HTMLStyleElement | null
   if (styleTag) {
@@ -41,6 +30,9 @@ export const toggleStyleTag = (styleId: string, enable: boolean): void => {
   }
 }
 
+/**
+ * Creates or updates the style tag's content when different
+ */
 export const createOrUpdateStyleTag = (id: string, content: string): void => {
   let styleTag = $(`#${id}`) as HTMLStyleElement | null
   if (styleTag) {
@@ -49,16 +41,57 @@ export const createOrUpdateStyleTag = (id: string, content: string): void => {
     }
     styleTag.disabled = false
   } else {
-    styleTag = $$$('style', { innerHTML: content, id: id }) as HTMLStyleElement
+    styleTag = $$$('style', { innerHTML: content, id }) as HTMLStyleElement
     document.head.prepend(styleTag)
   }
 }
+
+type Styles = {
+  sansStyles: string[]
+  monospaceStyles: string[]
+}
+
+/**
+ * Parses all webpage styles to get selectors for sans and monospace fonts
+ */
+const getStyles = memo((sansFontFamily: string, monospaceFontFamily: string): Styles => {
+  const styles: Styles = { sansStyles: [], monospaceStyles: [] }
+
+  for (let i = 0; i < document.styleSheets.length; i++) {
+    const styleSheet = document.styleSheets[i] as CSSStyleSheet
+
+    if (styleSheet.cssRules) {
+      for (let j = 0; j < styleSheet.cssRules.length; j++) {
+        const cssRule = styleSheet.cssRules[j] as CSSStyleRule
+
+        if (/serif|sans-serif|cursive|fantasy/.test(cssRule.cssText)) {
+          const cssSelector = cssRule.selectorText
+          if (cssSelector) {
+            styles.sansStyles.push(`${cssSelector}{font-family: ${sansFontFamily} !important;}`)
+          }
+        } else if (cssRule.cssText.includes('monospace')) {
+          const cssSelector = cssRule.selectorText
+          if (cssSelector) {
+            styles.monospaceStyles.push(
+              `${cssSelector}{font-family: ${monospaceFontFamily} !important;}`,
+            )
+          }
+        }
+      }
+    }
+  }
+
+  return styles
+})
 
 interface FontObject {
   fontFamily: string
   isGoogleFont: boolean
 }
 
+/**
+ * Collects and merges styles into one string and returns it
+ */
 const getCssRules = memo((fontObject: FontObject[]): string => {
   const [sansFont, monospaceFont] = fontObject
   const cssRules: string[] = []
@@ -93,82 +126,30 @@ const getCssRules = memo((fontObject: FontObject[]): string => {
 
   cssRules.push(`:root {${rootCssVariables.join('')}}`)
 
+  const generalStyles = getStyles(`var(--${SANS_CLASS})`, `var(--${MONOSPACE_CLASS})`)
+
+  if (sansFont.fontFamily) {
+    cssRules.push(generalStyles.sansStyles.join(''))
+  }
+
+  if (monospaceFont.fontFamily) {
+    cssRules.push(generalStyles.monospaceStyles.join(''))
+  }
+
   return cssRules.join('')
 })
 
-const getClassContent = memo((fontObject: FontObject[]): string => {
-  const [sansFont, monospaceFont] = fontObject
-
-  let classContent = sansFont.fontFamily
-    ? `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
-    : ''
-
-  classContent += sansFont.fontFamily ? `html {font-family: var(--${SANS_CLASS}) !important;}` : ''
-  classContent += sansFont.fontFamily ? `body {font-family: var(--${SANS_CLASS}) !important;}` : ''
-  classContent += monospaceFont.fontFamily
-    ? `
-    pre, code, tt, kbd, samp, var {font-family: var(--${MONOSPACE_CLASS}) !important;}
-    pre *, code *, tt *, kbd *, samp *, var * {font-family: var(--${MONOSPACE_CLASS}) !important;}
-  `
-    : ''
-
-  return classContent
-})
-
-const getFontFamily = (element: Element): string => {
-  try {
-    return getComputedStyle(element).fontFamily
-  } catch (error) {
-    console.error('❌ Error getting font family:', error)
-    return ''
-  }
+const addInlineStyle = (element: HTMLElement): void => {
+  element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
 }
 
-const isReplaceableFont = (fontFamily: string): boolean => {
-  if (!fontFamily) return false
-  if (fontFamily.split(',').length <= 1) return false
-  if (fontFamily.toLowerCase().includes('icon')) return false
-
-  return true
+const removeInlineStyle = (element: HTMLElement): void => {
+  element.style.removeProperty('font-family')
 }
 
-const replaceFont = (element: HTMLElement): boolean => {
-  const fontFamily = getFontFamily(element)
-
-  if (isReplaceableFont(fontFamily)) {
-    const replacement =
-      isMonospaceFont && /monospace/.test(fontFamily)
-        ? `var(--${MONOSPACE_CLASS})`
-        : isSansFont && /sans-serif|serif/.test(fontFamily)
-          ? `var(--${SANS_CLASS})`
-          : null
-
-    if (replacement) {
-      element.style.setProperty('font-family', replacement, 'important')
-      return true
-    }
-  }
-
-  return false
-}
-
-const replaceFonts = (elements: NodeListOf<HTMLElement>): void => {
-  elements.forEach((element) => replaceFont(element))
-}
-
-export const invokeReplacer = (): void => {
-  const elements = $$('body *') as NodeListOf<HTMLElement>
-  replaceFonts(elements)
-}
-
-const debouncedReplacer = debounceWithFirstCall(invokeReplacer, 200)
-
-export const invokeObserver = (): void => {
-  const observerOptions = { childList: true, subtree: true }
-  const observer = new MutationObserver(debouncedReplacer)
-  observer.observe(document, observerOptions)
-}
-
+/**
+ * Reinitializes settings to start preview by updating injected styles
+ */
 export const preview = async (): Promise<void> => {
   try {
     const { off } = (await LOCAL_CONFIG.get({ off: false })) as { off: boolean }
@@ -185,8 +166,11 @@ export const preview = async (): Promise<void> => {
   }
 }
 
+/**
+ * Initializes main functions
+ */
 export const init = (settings: { 'font-default': string; 'font-mono': string }): void => {
-  let { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
+  const { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
 
   isSansFont = sansFont?.length > 0
   isMonospaceFont = monospaceFont?.length > 0
@@ -199,16 +183,15 @@ export const init = (settings: { 'font-default': string; 'font-mono': string }):
   ]
 
   const cssRules = getCssRules(fontObject)
-  const classContent = getClassContent(fontObject)
 
-  createOrUpdateStyleTag(STYLE_TAG_ID, cssRules + classContent)
+  createOrUpdateStyleTag(STYLE_TAG_ID, cssRules)
 
   if (isSansFont) {
-    document.documentElement.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
-    document.body.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
+    addInlineStyle(document.documentElement)
+    addInlineStyle(document.body)
   } else {
-    document.documentElement.style.removeProperty('font-family')
-    document.body.style.removeProperty('font-family')
+    removeInlineStyle(document.documentElement)
+    removeInlineStyle(document.body)
   }
 }
 

@@ -8,17 +8,13 @@
 - https://material.io/blog/migrating-material-3
 */
 import { Message } from '@types'
-import { cleanupStyles, invokeObserver, invokeReplacer, preview } from '../utils/fontManager'
+import { cleanupStyles, preview } from '../utils/fontManager'
 ;(async () => {
   await preview()
 
   const navigationEvents = ['popstate', 'pushState', 'replaceState', 'pageshow']
 
   navigationEvents.forEach((event) => window.addEventListener(event, async () => await preview()))
-
-  document.addEventListener('DOMContentLoaded', invokeReplacer)
-
-  invokeObserver()
 
   chrome.runtime.onMessage.addListener(async (message: Message) => {
     switch (message.action) {
