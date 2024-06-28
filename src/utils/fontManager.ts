@@ -23,6 +23,8 @@ const EXCLUDED_TAGS: string[] = [
   'button',
   'li',
   'a',
+  'code',
+  'pre',
 ]
 
 // Cleanup styles
@@ -82,11 +84,11 @@ const getCssRules = memo((fontObject: FontObject[]): string => {
 
   const rootCssVariables: string[] = []
   if (sansFont.fontFamily) {
-    rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)};`)
+    rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)}, sans-serif;`)
   }
 
   if (monospaceFont.fontFamily) {
-    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)};`)
+    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)}, monospace;`)
   }
 
   cssRules.push(`:root {${rootCssVariables.join('')}}`)
@@ -95,7 +97,7 @@ const getCssRules = memo((fontObject: FontObject[]): string => {
 })
 
 const getClassContent = memo((fontObject: FontObject[]): string => {
-  const [sansFont] = fontObject
+  const [sansFont, monospaceFont] = fontObject
 
   let classContent = sansFont.fontFamily
     ? `:not(${EXCLUDED_TAGS.join(',')}) {font-family: var(--${SANS_CLASS}) !important;}`
@@ -103,10 +105,12 @@ const getClassContent = memo((fontObject: FontObject[]): string => {
 
   classContent += sansFont.fontFamily ? `html {font-family: var(--${SANS_CLASS}) !important;}` : ''
   classContent += sansFont.fontFamily ? `body {font-family: var(--${SANS_CLASS}) !important;}` : ''
-  classContent += `
+  classContent += monospaceFont.fontFamily
+    ? `
     pre, code, tt, kbd, samp, var {font-family: var(--${MONOSPACE_CLASS}) !important;}
     pre *, code *, tt *, kbd *, samp *, var * {font-family: var(--${MONOSPACE_CLASS}) !important;}
   `
+    : ''
 
   return classContent
 })
@@ -132,13 +136,15 @@ const replaceFont = (element: HTMLElement): boolean => {
   const fontFamily = getFontFamily(element)
 
   if (isReplaceableFont(fontFamily)) {
-    if (isMonospaceFont && /monospace/.test(fontFamily)) {
-      element.style.setProperty('font-family', `var(--${MONOSPACE_CLASS})`, 'important')
-      return true
-    }
+    const replacement =
+      isMonospaceFont && /monospace/.test(fontFamily)
+        ? `var(--${MONOSPACE_CLASS})`
+        : isSansFont && /sans-serif|serif/.test(fontFamily)
+          ? `var(--${SANS_CLASS})`
+          : null
 
-    if (isSansFont && /sans-serif|serif/.test(fontFamily)) {
-      element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
+    if (replacement) {
+      element.style.setProperty('font-family', replacement, 'important')
       return true
     }
   }
