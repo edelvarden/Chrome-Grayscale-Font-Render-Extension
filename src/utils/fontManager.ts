@@ -42,7 +42,9 @@ export const toggleStyleTag = (styleId: string, enable: boolean): void => {
 export const createOrUpdateStyleTag = (id: string, content: string): void => {
   let styleTag = $(`#${id}`) as HTMLStyleElement | null
   if (styleTag) {
-    styleTag.innerHTML = content
+    if (styleTag.innerHTML !== content) {
+      styleTag.innerHTML = content
+    }
     styleTag.disabled = false
   } else {
     styleTag = $$$('style', { innerHTML: content, id: id }) as HTMLStyleElement
