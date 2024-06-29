@@ -4,9 +4,6 @@
  * @param {number} [maxSize=10] The maximum number of entries in the cache.
  * @returns {Function & { clearCache: () => void }} The memoized function with a clearCache method.
  */
-export declare const memo: <T extends (...args: any[]) => any>(
-  fn: T,
-  maxSize?: number,
-) => T & {
-  clearCache: () => void
-}
+export declare const memo: <T extends (...args: any[]) => any>(fn: T, maxSize?: number) => T & {
+    clearCache: () => void;
+};

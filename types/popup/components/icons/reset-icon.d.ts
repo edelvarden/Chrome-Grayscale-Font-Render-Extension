@@ -1,4 +1,4 @@
-import { LitElement } from 'lit'
+import { LitElement } from 'lit';
 export declare class ResetIcon extends LitElement {
-  render(): import('lit').TemplateResult<1>
+    render(): import("lit").TemplateResult<1>;
 }
