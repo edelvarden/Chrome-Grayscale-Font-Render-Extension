@@ -65,6 +65,34 @@ const fetchStylesheet = async (url: string): Promise<string> => {
   return response.text()
 }
 
+const parseRootVariables = (
+  style: string,
+  sansFontFamily: string,
+  monospaceFontFamily: string,
+): { sansRootVariables: Set<string>; monospaceRootVariables: Set<string> } => {
+  const sansRootVariables = new Set<string>()
+  const monospaceRootVariables = new Set<string>()
+
+  style
+    .split('{')[1]
+    .split(';')
+    .forEach((styleLine) => {
+      const cssVariables = styleLine.split(':')
+      cssVariables.forEach((variable) => {
+        if (variable.startsWith('--')) {
+          if (/serif|sans-serif|cursive|fantasy/.test(styleLine)) {
+            sansRootVariables.add(`${variable}:${sansFontFamily}!important;`)
+          }
+          if (styleLine.includes('monospace')) {
+            monospaceRootVariables.add(`${variable}:${monospaceFontFamily}!important;`)
+          }
+        }
+      })
+    })
+
+  return { sansRootVariables, monospaceRootVariables }
+}
+
 /**
  * Loads and parses cross-origin stylesheets
  */
@@ -84,54 +112,22 @@ const loadCrossOriginStyles = async (
     try {
       const cssText = await fetchStylesheet(url)
       cssText.split('}').forEach((style) => {
-        if (/serif|sans-serif|cursive|fantasy/.test(style)) {
-          const cssSelector = style.split('{')[0]
-          if (!cssSelector.startsWith('@')) {
-            styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
-          }
+        const cssSelector = style.split('{')[0]
 
-          // Collect root variables
-          if (cssSelector.trim().startsWith(':root')) {
-            style
-              .split('{')[1]
-              .split(';')
-              .forEach((styleLine) => {
-                if (/serif|sans-serif|cursive|fantasy/.test(styleLine)) {
-                  const cssVariables = styleLine.split(':')
-                  cssVariables.forEach((variable) => {
-                    if (variable.startsWith('--')) {
-                      styles.sansRootVariables.add(`${variable}:${sansFontFamily}!important;`)
-                    }
-                  })
-                }
-              })
-          }
-        } else if (style.includes('monospace')) {
-          const cssSelector = style.split('{')[0]
-          if (!cssSelector.startsWith('@')) {
-            styles.monospaceStyles.add(
-              `${cssSelector}{font-family:${monospaceFontFamily}!important;}`,
-            )
-          }
+        if (/serif|sans-serif|cursive|fantasy/.test(style) && !cssSelector.startsWith('@')) {
+          styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
+        } else if (style.includes('monospace') && !cssSelector.startsWith('@')) {
+          styles.monospaceStyles.add(
+            `${cssSelector}{font-family:${monospaceFontFamily}!important;}`,
+          )
+        }
 
-          // Collect root variables
-          if (cssSelector.trim().startsWith(':root')) {
-            style
-              .split('{')[1]
-              .split(';')
-              .forEach((styleLine) => {
-                if (styleLine.includes('monospace')) {
-                  const cssVariables = styleLine.split(':')
-                  cssVariables.forEach((variable) => {
-                    if (variable.startsWith('--')) {
-                      styles.monospaceRootVariables.add(
-                        `${variable}:${monospaceFontFamily}!important;`,
-                      )
-                    }
-                  })
-                }
-              })
-          }
+        if (cssSelector.trim().startsWith(':root')) {
+          const rootVars = parseRootVariables(style, sansFontFamily, monospaceFontFamily)
+          rootVars.sansRootVariables.forEach((item) => {
+            styles.sansRootVariables.add(item)
+          })
+          rootVars.monospaceRootVariables.forEach((item) => styles.monospaceRootVariables.add(item))
         }
       })
     } catch (error) {
@@ -161,33 +157,22 @@ const getStyles = memo(
         if (styleSheet.cssRules) {
           for (let j = 0; j < styleSheet.cssRules.length; j++) {
             const cssRule = styleSheet.cssRules[j] as CSSStyleRule
+            const cssSelector = cssRule.selectorText
 
-            if (/serif|sans-serif|cursive|fantasy/.test(cssRule.cssText)) {
-              const cssSelector = cssRule.selectorText
-              if (cssSelector) {
-                sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
-              }
-            } else if (cssRule.cssText.includes('monospace')) {
-              const cssSelector = cssRule.selectorText
-              if (cssSelector) {
-                monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
-              }
+            if (/serif|sans-serif|cursive|fantasy/.test(cssRule.cssText) && cssSelector) {
+              sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
+            } else if (cssRule.cssText.includes('monospace') && cssSelector) {
+              monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
             }
 
-            // Collect root variables
             if (cssRule.selectorText === ':root') {
-              const rootStyle = cssRule.style
-              for (let k = 0; k < rootStyle.length; k++) {
-                const varName = rootStyle[k]
-                const varValue = rootStyle.getPropertyValue(varName)
-                if (/serif|sans-serif|cursive|fantasy/.test(varValue)) {
-                  sansRootVariables.add(`${varName}: ${sansFontFamily},${varValue} !important;`)
-                } else if (varValue.includes('monospace')) {
-                  monospaceRootVariables.add(
-                    `${varName}: ${monospaceFontFamily},${varValue} !important;`,
-                  )
-                }
-              }
+              const rootVars = parseRootVariables(
+                cssRule.cssText,
+                sansFontFamily,
+                monospaceFontFamily,
+              )
+              rootVars.sansRootVariables.forEach((item) => sansRootVariables.add(item))
+              rootVars.monospaceRootVariables.forEach((item) => monospaceRootVariables.add(item))
             }
           }
         }
