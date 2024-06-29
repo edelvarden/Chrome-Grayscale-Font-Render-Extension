@@ -41,4 +41,31 @@ Enable **Advanced mode** checkbox to swap between two fonts for comparison.
 
 ### Functionality
 
-The extension collects selectors and variables responsible for the font family on each page individually, replaces them with custom values, and injects them as a single style tag in one DOM operation. This approach improves performance compared to using observers and hard-coding selector replacements, which are ineffective because, unlike static CSS, the DOM content changes dynamically.
+The extension collects from CSS selectors and variables responsible for the font family on each page individually, replaces them with custom values, and injects them as a single style tag in one DOM operation. This approach improves performance compared to using observers and hard-coding selector replacements, which are ineffective because, unlike static CSS, the DOM content changes dynamically.
+
+## Build and Development
+
+### Prerequisites
+
+- [Visual Studio Code](https://code.visualstudio.com/) (Optional)
+- [NodeJS](https://nodejs.org/en/download)
+- [pnpm](https://pnpm.io/installation)
+- Browser
+
+To start development mode, run the following command, then open [chrome://extensions](chrome://extensions), enable "Developer mode" click "Load Unpacked" and select the build folder:
+
+```git
+pnpm dev
+```
+
+Build command:
+
+```git
+pnpm build
+```
+
+Build and pack extension into a zip file:
+
+```git
+pnpm zip
+```
