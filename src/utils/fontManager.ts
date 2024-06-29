@@ -73,18 +73,21 @@ const parseVariablesFromSelector = (
   const sansVariables = new Set<string>()
   const monospaceVariables = new Set<string>()
 
-  style.split(';').forEach((styleLine) => {
-    const cssVariables = styleLine.split(':')
-    cssVariables.forEach((variable) => {
-      if (variable.startsWith('--')) {
-        if (/serif|sans-serif|cursive|fantasy/.test(styleLine)) {
-          sansVariables.add(`${variable}:${sansFontFamily}!important;`)
-        }
-        if (styleLine.includes('monospace')) {
-          monospaceVariables.add(`${variable}:${monospaceFontFamily}!important;`)
-        }
-      }
-    })
+  const styleObject = style.split('{')
+
+  styleObject[1].split(';').forEach((item) => {
+    const cssSelector = styleObject[0]
+    if (/serif|sans-serif|cursive|fantasy/.test(item)) {
+      const cssVariable = item.split(':')[0]
+
+      sansVariables.add(`${cssSelector.trim()}{${cssVariable.trim()}:${sansFontFamily}!important;}`)
+    } else if (item.includes('monospace')) {
+      const cssVariable = item.split(':')[0]
+
+      monospaceVariables.add(
+        `${cssSelector.trim()}{${cssVariable.trim()}:${monospaceFontFamily}!important;}`,
+      )
+    }
   })
 
   return { sansVariables, monospaceVariables }
@@ -240,21 +243,16 @@ const getCssRules = memo(async (fontObject: FontObject[]): Promise<string> => {
     )
   }
 
-  if (sansFont.fontFamily) {
-    rootCssVariables.push(Array.from(generalStyles.sansRootVariables).join(';'))
-  }
-  if (monospaceFont.fontFamily) {
-    rootCssVariables.push(Array.from(generalStyles.monospaceRootVariables).join(';'))
-  }
-
   cssRules.push(`:root{${rootCssVariables.join('')}}`)
-  cssRules.push(`h1,h2,h3,h4,h5,h6,p{font-family:var(--${SANS_CLASS})!important}`)
 
   if (sansFont.fontFamily) {
+    cssRules.push(`h1,h2,h3,h4,h5,h6,p{font-family:var(--${SANS_CLASS})!important}`)
+    cssRules.push(Array.from(generalStyles.sansRootVariables).join(''))
     cssRules.push(Array.from(generalStyles.sansStyles).join(''))
   }
 
   if (monospaceFont.fontFamily) {
+    cssRules.push(Array.from(generalStyles.monospaceRootVariables).join(''))
     cssRules.push(Array.from(generalStyles.monospaceStyles).join(''))
   }
 
