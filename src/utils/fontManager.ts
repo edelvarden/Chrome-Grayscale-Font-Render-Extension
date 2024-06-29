@@ -4,6 +4,7 @@ import { CONFIG, LOCAL_CONFIG } from './storage'
 import { addHashSuffix, fixName } from './stringUtils'
 
 // Constants with unique names
+const FALLBACK_CLASS = addHashSuffix('fallback')
 const SANS_CLASS = addHashSuffix('sans')
 const MONOSPACE_CLASS = addHashSuffix('monospace')
 const STYLE_TAG_ID = addHashSuffix('style')
@@ -60,24 +61,28 @@ const getStyles = memo((sansFontFamily: string, monospaceFontFamily: string): St
   for (let i = 0; i < document.styleSheets.length; i++) {
     const styleSheet = document.styleSheets[i] as CSSStyleSheet
 
-    if (styleSheet.cssRules) {
-      for (let j = 0; j < styleSheet.cssRules.length; j++) {
-        const cssRule = styleSheet.cssRules[j] as CSSStyleRule
+    try {
+      if (styleSheet.cssRules) {
+        for (let j = 0; j < styleSheet.cssRules.length; j++) {
+          const cssRule = styleSheet.cssRules[j] as CSSStyleRule
 
-        if (/serif|sans-serif|cursive|fantasy/.test(cssRule.cssText)) {
-          const cssSelector = cssRule.selectorText
-          if (cssSelector) {
-            styles.sansStyles.push(`${cssSelector}{font-family: ${sansFontFamily} !important;}`)
-          }
-        } else if (cssRule.cssText.includes('monospace')) {
-          const cssSelector = cssRule.selectorText
-          if (cssSelector) {
-            styles.monospaceStyles.push(
-              `${cssSelector}{font-family: ${monospaceFontFamily} !important;}`,
-            )
+          if (/serif|sans-serif|cursive|fantasy/.test(cssRule.cssText)) {
+            const cssSelector = cssRule.selectorText
+            if (cssSelector) {
+              styles.sansStyles.push(`${cssSelector}{font-family: ${sansFontFamily} !important;}`)
+            }
+          } else if (cssRule.cssText.includes('monospace')) {
+            const cssSelector = cssRule.selectorText
+            if (cssSelector) {
+              styles.monospaceStyles.push(
+                `${cssSelector}{font-family: ${monospaceFontFamily} !important;}`,
+              )
+            }
           }
         }
       }
+    } catch (error) {
+      console.warn(`⚠️ Unable to access stylesheet rules for stylesheet at index ${i}:`, error)
     }
   }
 
@@ -116,12 +121,21 @@ const getCssRules = memo((fontObject: FontObject[]): string => {
   }
 
   const rootCssVariables: string[] = []
+
+  rootCssVariables.push(
+    `--${FALLBACK_CLASS}:"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";`,
+  )
+
   if (sansFont.fontFamily) {
-    rootCssVariables.push(`--${SANS_CLASS}: ${fixName(sansFont.fontFamily)}, sans-serif;`)
+    rootCssVariables.push(
+      `--${SANS_CLASS}: ${fixName(sansFont.fontFamily)},sans-serif,var(--${FALLBACK_CLASS});`,
+    )
   }
 
   if (monospaceFont.fontFamily) {
-    rootCssVariables.push(`--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)}, monospace;`)
+    rootCssVariables.push(
+      `--${MONOSPACE_CLASS}: ${fixName(monospaceFont.fontFamily)},monospace,var(--${FALLBACK_CLASS});`,
+    )
   }
 
   cssRules.push(`:root {${rootCssVariables.join('')}}`)

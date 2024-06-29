@@ -12,7 +12,7 @@ import { cleanupStyles, preview } from '../utils/fontManager'
 ;(async () => {
   await preview()
 
-  const navigationEvents = ['popstate', 'pushState', 'replaceState', 'pageshow']
+  const navigationEvents = ['popstate', 'pushState', 'replaceState', 'pageshow', 'DOMContentLoaded']
 
   navigationEvents.forEach((event) => window.addEventListener(event, async () => await preview()))
 
