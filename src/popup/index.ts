@@ -198,6 +198,8 @@ const initializeSettings = (
   // Add (none) option
   fontList.unshift({ fontId: '', displayName: tl('SETTINGS_FONT_DEFAULT') })
 
+  const selectWithStyle = isAdvancedMode ? '--md-select-width: 175px;' : ''
+
   const template: TemplateResult = html`
     <div class="surface">
       <md-elevation></md-elevation>
@@ -230,6 +232,7 @@ const initializeSettings = (
                     id="${id}"
                     .value="${fontSettings[id as keyof Settings] || ''}"
                     .options="${fontList}"
+                    style="${selectWithStyle}"
                     @change="${handleSaveSettings}"
                   ></select-component>
                   ${isAdvancedMode
@@ -243,6 +246,7 @@ const initializeSettings = (
                           id="${id}2"
                           .value="${fontSettings[`${id}2` as keyof Settings] || ''}"
                           .options="${fontList}"
+                          style="${selectWithStyle}"
                           @change="${handleSaveSettings}"
                         ></select-component>
                       `
@@ -251,7 +255,7 @@ const initializeSettings = (
               </div>
             `
           })}
-          <div class="settings__item">${advancedModeCheckbox}</div>
+          <div class="settings__item" style="padding-left:12px;">${advancedModeCheckbox}</div>
         </section>
       </div>
     </div>

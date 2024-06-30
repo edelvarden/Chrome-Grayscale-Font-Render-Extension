@@ -27,8 +27,6 @@ export class SelectComponent extends LitElement {
       --md-select-option-bg-color: var(--md-sys-color-surface-container);
       --md-select-side-padding: 8px;
       --md-select-text-color: var(--md-sys-color-on-background);
-
-      --md-select-width: 180px;
     }
 
     .md-select {

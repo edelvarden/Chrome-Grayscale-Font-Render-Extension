@@ -12,7 +12,6 @@ Some web pages use bad or unreadable fonts, I created this extension because I w
 - Respects iconic fonts (eg., "Font Awesome", "Material Icons")
 - No dependencies
 - Small content script bundle size (~ 5 kB │ gzip: 2 kB)
-- Doesn't increase web page load time ([more info](#functionality))
 - Works very fast
 
 ## How to install?
@@ -41,7 +40,7 @@ Enable **Advanced mode** checkbox to swap between two fonts for comparison.
 
 ### Functionality
 
-The extension collects from CSS selectors and variables responsible for the font family on each page individually, replaces them with custom values, and injects them as a single style tag in one DOM operation. This approach improves performance compared to using observers and hard-coding selector replacements, which are ineffective because, unlike static CSS, the DOM content changes dynamically.
+The extension collects CSS selectors and variables responsible for font families from websites, replaces them with custom values, and injects them as a single style tag in one DOM operation. This method improves performance over using observers and hard-coding selector replacements, which are ineffective with dynamically changing DOM content.
 
 ## Build and Development
 

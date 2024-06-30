@@ -2,6 +2,7 @@ import { $, $$$ } from './domUtils'
 import { memo } from './memo'
 import { CONFIG, LOCAL_CONFIG } from './storage'
 import { addHashSuffix, fixName } from './stringUtils'
+import { getStyles } from './styleParser'
 
 // Constants with unique names
 const FALLBACK_CLASS = addHashSuffix('fallback')
@@ -46,152 +47,6 @@ export const createOrUpdateStyleTag = (id: string, content: string): void => {
     document.head.prepend(styleTag)
   }
 }
-
-type Styles = {
-  sansStyles: Set<string>
-  monospaceStyles: Set<string>
-  sansRootVariables: Set<string>
-  monospaceRootVariables: Set<string>
-}
-
-/**
- * Fetches and parses a stylesheet from a given URL
- */
-const fetchStylesheet = async (url: string): Promise<string> => {
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch stylesheet from ${url}`)
-  }
-  return response.text()
-}
-
-const parseVariablesFromSelector = (
-  style: string,
-  sansFontFamily: string,
-  monospaceFontFamily: string,
-): { sansVariables: Set<string>; monospaceVariables: Set<string> } => {
-  const sansVariables = new Set<string>()
-  const monospaceVariables = new Set<string>()
-
-  const styleObject = style.split('{')
-
-  styleObject[1].split(';').forEach((item) => {
-    const cssSelector = styleObject[0]
-    if (/serif|sans-serif|cursive|fantasy/.test(item)) {
-      const cssVariable = item.split(':')[0]
-
-      sansVariables.add(`${cssSelector.trim()}{${cssVariable.trim()}:${sansFontFamily}!important;}`)
-    } else if (item.includes('monospace')) {
-      const cssVariable = item.split(':')[0]
-
-      monospaceVariables.add(
-        `${cssSelector.trim()}{${cssVariable.trim()}:${monospaceFontFamily}!important;}`,
-      )
-    }
-  })
-
-  return { sansVariables, monospaceVariables }
-}
-
-/**
- * Loads and parses cross-origin stylesheets
- */
-const loadCrossOriginStyles = async (
-  url: string | null,
-  sansFontFamily: string,
-  monospaceFontFamily: string,
-): Promise<Styles> => {
-  const styles = {
-    sansStyles: new Set<string>(),
-    monospaceStyles: new Set<string>(),
-    sansRootVariables: new Set<string>(),
-    monospaceRootVariables: new Set<string>(),
-  }
-
-  if (url) {
-    try {
-      const cssText = await fetchStylesheet(url)
-      cssText.split('}').forEach((style) => {
-        const cssSelector = style.split('{')[0]
-
-        if (/serif|sans-serif|cursive|fantasy/.test(style) && !cssSelector.startsWith('@')) {
-          styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
-        } else if (style.includes('monospace') && !cssSelector.startsWith('@')) {
-          styles.monospaceStyles.add(
-            `${cssSelector}{font-family:${monospaceFontFamily}!important;}`,
-          )
-        }
-
-        if (cssSelector.trim().startsWith(':root')) {
-          const rootVars = parseVariablesFromSelector(style, sansFontFamily, monospaceFontFamily)
-          rootVars.sansVariables.forEach((item) => styles.sansRootVariables.add(item))
-          rootVars.monospaceVariables.forEach((item) => styles.monospaceRootVariables.add(item))
-        }
-      })
-    } catch (error) {
-      console.warn(`⚠️ Failed to fetch or parse stylesheet from ${url}:`, error)
-    }
-  }
-
-  return styles
-}
-
-/**
- * Parses all webpage styles to get selectors for sans and monospace fonts
- */
-const getStyles = memo(
-  async (sansFontFamily: string, monospaceFontFamily: string): Promise<Styles> => {
-    const sansStyles = new Set<string>()
-    const monospaceStyles = new Set<string>()
-    const sansRootVariables = new Set<string>()
-    const monospaceRootVariables = new Set<string>()
-
-    for (let i = 0; i < document.styleSheets.length; i++) {
-      const styleSheet = document.styleSheets[i] as CSSStyleSheet
-
-      const styleUrl = styleSheet.href
-
-      try {
-        if (styleSheet.cssRules) {
-          for (let j = 0; j < styleSheet.cssRules.length; j++) {
-            const cssRule = styleSheet.cssRules[j] as CSSStyleRule
-            const cssSelector = cssRule.selectorText
-
-            if (/serif|sans-serif|cursive|fantasy/.test(cssRule.cssText) && cssSelector) {
-              sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
-            } else if (cssRule.cssText.includes('monospace') && cssSelector) {
-              monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
-            }
-
-            const rootVars = parseVariablesFromSelector(
-              cssRule.cssText,
-              sansFontFamily,
-              monospaceFontFamily,
-            )
-            rootVars.sansVariables.forEach((item) => sansRootVariables.add(item))
-            rootVars.monospaceVariables.forEach((item) => monospaceRootVariables.add(item))
-          }
-        }
-      } catch (error) {
-        console.warn(`⚠️ Unable to access stylesheet rules for stylesheet at index ${i}:`, error)
-        // Handle cross-origin stylesheets if needed
-        await loadCrossOriginStyles(styleUrl, sansFontFamily, monospaceFontFamily).then((item) => {
-          sansStyles.add(Array.from(item.sansStyles).join(''))
-          monospaceStyles.add(Array.from(item.monospaceStyles).join(''))
-          sansRootVariables.add(Array.from(item.sansRootVariables).join(''))
-          monospaceRootVariables.add(Array.from(item.monospaceRootVariables).join(''))
-        })
-      }
-    }
-
-    return {
-      sansStyles,
-      monospaceStyles,
-      sansRootVariables,
-      monospaceRootVariables,
-    }
-  },
-)
 
 interface FontObject {
   fontFamily: string
@@ -247,13 +102,12 @@ const getCssRules = memo(async (fontObject: FontObject[]): Promise<string> => {
 
   if (sansFont.fontFamily) {
     cssRules.push(`h1,h2,h3,h4,h5,h6,p{font-family:var(--${SANS_CLASS})!important}`)
-    cssRules.push(Array.from(generalStyles.sansRootVariables).join(''))
-    cssRules.push(Array.from(generalStyles.sansStyles).join(''))
+
+    cssRules.push([...generalStyles.sansStyles].join(''))
   }
 
   if (monospaceFont.fontFamily) {
-    cssRules.push(Array.from(generalStyles.monospaceRootVariables).join(''))
-    cssRules.push(Array.from(generalStyles.monospaceStyles).join(''))
+    cssRules.push([...generalStyles.monospaceStyles].join(''))
   }
 
   return cssRules.join('')
