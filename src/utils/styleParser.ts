@@ -55,7 +55,7 @@ const parseStyles = (
     monospaceStyles: new Set<string>(),
   }
 
-  if (!cssSelector.trimStart().startsWith('@')) {
+  if (!cssSelector.trimStart().startsWith('@') && !cssSelector.trimStart().startsWith('/*')) {
     if (/serif|sans-serif|cursive|fantasy/.test(cssText)) {
       styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
       parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)

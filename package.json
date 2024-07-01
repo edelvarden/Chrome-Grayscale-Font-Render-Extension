@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "fmt": "prettier --write \"src/**/*.{ts,js,json,css,md}\"",
     "zip": "pnpm run build && node scripts/zip.js",
-    "test": "jest"
+    "test": "jest --testPathPattern=\"src/__tests__\"",
+    "bench": "jest --runInBand \"src/__benchmarks__/benchmark.test.ts\""
   },
   "lint-staged": {
     "*.{js,ts,css,md}": [

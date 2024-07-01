@@ -1,4 +1,4 @@
-import { memo } from '../memo'
+import { memo } from '../utils/memo'
 
 describe('memo', () => {
   it('should memoize results', () => {

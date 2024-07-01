@@ -2,10 +2,10 @@
  * @jest-environment jsdom
  */
 
-import { $, $$$ } from '../domUtils'
-import { createOrUpdateStyleTag, toggleStyleTag } from '../fontManager'
+import { $, $$$ } from '../utils/domUtils'
+import { createOrUpdateStyleTag, toggleStyleTag } from '../utils/fontManager'
 
-jest.mock('../storage', () => ({
+jest.mock('../utils/storage', () => ({
   CONFIG: {
     get: jest.fn(),
   },
@@ -14,7 +14,7 @@ jest.mock('../storage', () => ({
   },
 }))
 
-jest.mock('../stringUtils', () => ({
+jest.mock('../utils/stringUtils', () => ({
   addHashSuffix: jest.fn((prefix) => `${prefix}__hashed`),
   fixName: jest.fn((fontFamily) => fontFamily.replace(/['"]/g, '').trim()),
 }))

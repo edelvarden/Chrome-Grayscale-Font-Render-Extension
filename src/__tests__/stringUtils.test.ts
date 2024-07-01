@@ -1,4 +1,4 @@
-import { addHashSuffix, fixName } from '../stringUtils'
+import { addHashSuffix, fixName } from '../utils/stringUtils'
 
 describe('String Utility Functions Tests', () => {
   describe('fixName function', () => {

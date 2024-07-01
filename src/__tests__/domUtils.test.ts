@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { $, $$, $$$ } from '../domUtils'
+import { $, $$, $$$ } from '../utils/domUtils'
 
 describe('DOM Utility Functions Tests', () => {
   beforeEach(() => {
