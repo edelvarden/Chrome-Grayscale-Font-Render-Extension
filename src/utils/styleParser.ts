@@ -21,12 +21,19 @@ const parseVariables = (
   cssText: string,
   styleObject: Set<string>,
   fontFamily: string,
+  isMonospace: boolean = false,
 ) => {
   const rules = cssText.split('{')[1].split(';')
+
   rules.forEach((item) => {
     const trimmedItem = item.trim()
-    if (/serif|sans-serif|cursive|fantasy/.test(trimmedItem)) {
-      const variable = trimmedItem.split(':')[0]
+    const [variable, value] = trimmedItem.split(':')
+
+    if (isMonospace && /monospace/.test(value)) {
+      if (variable.startsWith('--')) {
+        styleObject.add(`${cssSelector}{${variable}:${fontFamily}!important;}`)
+      }
+    } else if (!isMonospace && /serif|sans-serif|cursive|fantasy/.test(value)) {
       if (variable.startsWith('--')) {
         styleObject.add(`${cssSelector}{${variable}:${fontFamily}!important;}`)
       }
@@ -48,12 +55,15 @@ const parseStyles = (
     monospaceStyles: new Set<string>(),
   }
 
-  if (/serif|sans-serif|cursive|fantasy/.test(cssText) && !cssSelector.startsWith('@')) {
-    styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
-    parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)
-  } else if (cssText.includes('monospace') && !cssSelector.startsWith('@')) {
-    styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
-    parseVariables(cssSelector, cssText, styles.monospaceStyles, monospaceFontFamily)
+  if (!cssSelector.trimStart().startsWith('@')) {
+    if (/serif|sans-serif|cursive|fantasy/.test(cssText)) {
+      styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
+      parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)
+    }
+    if (cssText.includes('monospace')) {
+      styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
+      parseVariables(cssSelector, cssText, styles.monospaceStyles, monospaceFontFamily, true)
+    }
   }
 
   return styles
