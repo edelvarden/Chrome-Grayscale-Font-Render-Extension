@@ -44,7 +44,7 @@ export const createOrUpdateStyleTag = (id: string, content: string): void => {
     styleTag.disabled = false
   } else {
     styleTag = $$$('style', { innerHTML: content, id }) as HTMLStyleElement
-    document.head.prepend(styleTag)
+    document.head.append(styleTag) // append is require to override !important rules
   }
 }
 
