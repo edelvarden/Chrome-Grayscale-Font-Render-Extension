@@ -1,5 +1,8 @@
 import { memo } from './memo'
 
+const monospaceRegex = /monospace/
+const serifRegex = /serif|sans-serif|cursive|fantasy/
+
 type Styles = {
   sansStyles: Set<string>
   monospaceStyles: Set<string>
@@ -17,6 +20,34 @@ const fetchStylesheet = async (url: string): Promise<string> => {
 }
 
 /**
+ * Special case for variables like `--font-body: Inter, var(--font-fallback)`
+ */
+const addVariableStyles = (
+  cssSelector: string,
+  variableMap: Record<string, string>,
+  styleObject: Set<string>,
+  fontFamily: string,
+) => {
+  const fontRegex = /calc|rem|em|px|%|\//
+
+  styleObject.forEach((item) => {
+    const props = item.split('{')[1]
+    if (props.startsWith('--')) {
+      const variableName = props.split(':')[0]
+      Object.keys(variableMap).forEach((key) => {
+        if (
+          variableMap[key].includes(variableName) &&
+          variableMap[key].length > 1 &&
+          !fontRegex.test(variableMap[key])
+        ) {
+          styleObject.add(`${cssSelector}{${key}:${fontFamily}!important;}`)
+        }
+      })
+    }
+  })
+}
+
+/**
  * Parses CSS variables in a CSS rule and adds them to a style set
  */
 const parseVariables = (
@@ -25,22 +56,26 @@ const parseVariables = (
   styleObject: Set<string>,
   fontFamily: string,
   isMonospace: boolean = false,
-) => {
+): Record<string, string> => {
   const declarations = cssText.split('{')[1].split(';')
+  const variableMap: Record<string, string> = {}
 
   declarations.forEach((declaration) => {
-    const trimmedDeclaration = declaration.trim()
-    const [property, value] = trimmedDeclaration.split(':')
+    const [property, value] = declaration.trim().split(':')
+    if (property && value) {
+      const resolvedValue = value.trim()
+      variableMap[property] = resolvedValue
 
-    if (
-      (isMonospace && /monospace/.test(value)) ||
-      (!isMonospace && /serif|sans-serif|cursive|fantasy/.test(value))
-    ) {
-      if (property.startsWith('--')) {
+      if (
+        property.startsWith('--') &&
+        (isMonospace ? monospaceRegex : serifRegex).test(resolvedValue)
+      ) {
         styleObject.add(`${cssSelector}{${property}:${fontFamily}!important;}`)
       }
     }
   })
+
+  return variableMap
 }
 
 /**
@@ -58,13 +93,21 @@ const parseStyles = (
   }
 
   if (!cssSelector.trimStart().startsWith('@') && !cssSelector.trimStart().startsWith('/*')) {
-    if (/serif|sans-serif|cursive|fantasy/.test(cssText)) {
+    if (serifRegex.test(cssText)) {
       styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
-      parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)
+      const variables = parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)
+      addVariableStyles(cssSelector, variables, styles.sansStyles, sansFontFamily)
     }
-    if (cssText.includes('monospace')) {
+    if (monospaceRegex.test(cssText)) {
       styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
-      parseVariables(cssSelector, cssText, styles.monospaceStyles, monospaceFontFamily, true)
+      const variables = parseVariables(
+        cssSelector,
+        cssText,
+        styles.monospaceStyles,
+        monospaceFontFamily,
+        true,
+      )
+      addVariableStyles(cssSelector, variables, styles.monospaceStyles, monospaceFontFamily)
     }
   }
 

@@ -20,7 +20,7 @@ beforeAll(() => {
 test('Benchmark getStyles performance', async () => {
   const sansFontFamily = 'Arial, sans-serif'
   const monospaceFontFamily = 'Courier New, monospace'
-  const iterations = 10
+  const iterations = 30
   const times: number[] = []
 
   for (let i = 0; i < iterations; i++) {
