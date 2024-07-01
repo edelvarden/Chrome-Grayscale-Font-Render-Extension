@@ -16,6 +16,9 @@ const fetchStylesheet = async (url: string): Promise<string> => {
   return response.text()
 }
 
+/**
+ * Parses CSS variables in a CSS rule and adds them to a style set
+ */
 const parseVariables = (
   cssSelector: string,
   cssText: string,
@@ -23,19 +26,18 @@ const parseVariables = (
   fontFamily: string,
   isMonospace: boolean = false,
 ) => {
-  const rules = cssText.split('{')[1].split(';')
+  const declarations = cssText.split('{')[1].split(';')
 
-  rules.forEach((item) => {
-    const trimmedItem = item.trim()
-    const [variable, value] = trimmedItem.split(':')
+  declarations.forEach((declaration) => {
+    const trimmedDeclaration = declaration.trim()
+    const [property, value] = trimmedDeclaration.split(':')
 
-    if (isMonospace && /monospace/.test(value)) {
-      if (variable.startsWith('--')) {
-        styleObject.add(`${cssSelector}{${variable}:${fontFamily}!important;}`)
-      }
-    } else if (!isMonospace && /serif|sans-serif|cursive|fantasy/.test(value)) {
-      if (variable.startsWith('--')) {
-        styleObject.add(`${cssSelector}{${variable}:${fontFamily}!important;}`)
+    if (
+      (isMonospace && /monospace/.test(value)) ||
+      (!isMonospace && /serif|sans-serif|cursive|fantasy/.test(value))
+    ) {
+      if (property.startsWith('--')) {
+        styleObject.add(`${cssSelector}{${property}:${fontFamily}!important;}`)
       }
     }
   })
@@ -50,7 +52,7 @@ const parseStyles = (
   sansFontFamily: string,
   monospaceFontFamily: string,
 ): Styles => {
-  const styles = {
+  const styles: Styles = {
     sansStyles: new Set<string>(),
     monospaceStyles: new Set<string>(),
   }
@@ -77,7 +79,7 @@ const loadCrossOriginStyles = async (
   sansFontFamily: string,
   monospaceFontFamily: string,
 ): Promise<Styles> => {
-  const styles = {
+  const styles: Styles = {
     sansStyles: new Set<string>(),
     monospaceStyles: new Set<string>(),
   }
@@ -104,7 +106,7 @@ const loadCrossOriginStyles = async (
  */
 export const getStyles = memo(
   async (sansFontFamily: string, monospaceFontFamily: string): Promise<Styles> => {
-    const styles = {
+    const styles: Styles = {
       sansStyles: new Set<string>(),
       monospaceStyles: new Set<string>(),
     }

@@ -40,7 +40,7 @@ Enable **Advanced mode** checkbox to swap between two fonts for comparison.
 
 ### Functionality
 
-The extension collects CSS selectors and variables responsible for font families from websites, replaces them with custom values, and injects them as a single style tag in one DOM operation. This method improves performance over using observers and hard-coding selector replacements, which are ineffective with dynamically changing DOM content.
+The extension parses CSS selectors and variables related to font families from website stylesheets. It replaces them with custom font values and consolidates them into a single style tag injected into the DOM. This approach enhances performance compared to using observers with static selector replacements, especially in dynamic DOM environments where content changes frequently.
 
 ## Build and Development
 
