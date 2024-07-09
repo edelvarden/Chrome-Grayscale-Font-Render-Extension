@@ -94,12 +94,16 @@ const parseStyles = (
 
   if (!cssSelector.trimStart().startsWith('@') && !cssSelector.trimStart().startsWith('/*')) {
     if (serifRegex.test(cssText)) {
-      styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
+      if (cssText.includes('font-family:')) {
+        styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
+      }
       const variables = parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)
       addVariableStyles(cssSelector, variables, styles.sansStyles, sansFontFamily)
     }
     if (monospaceRegex.test(cssText)) {
-      styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
+      if (cssText.includes('font-family:')) {
+        styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
+      }
       const variables = parseVariables(
         cssSelector,
         cssText,
@@ -154,16 +158,17 @@ export const getStyles = memo(
       monospaceStyles: new Set<string>(),
     }
 
-    for (let i = 0; i < document.styleSheets.length; i++) {
-      const styleSheet = document.styleSheets[i] as CSSStyleSheet
+    const styleSheets = new Set(document.styleSheets)
+
+    for (const styleSheet of styleSheets) {
       const styleUrl = styleSheet.href
 
       try {
         const styleRules = styleSheet.cssRules as CSSRuleList
 
         if (styleRules) {
-          for (let j = 0; j < styleRules.length; j++) {
-            const cssRule = styleRules[j] as CSSStyleRule
+          for (const styleRule of styleRules) {
+            const cssRule = styleRule as CSSStyleRule
             const cssText = cssRule.cssText
             const cssSelector = cssRule.selectorText
 
