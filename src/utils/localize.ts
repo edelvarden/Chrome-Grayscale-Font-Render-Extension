@@ -51,7 +51,7 @@ const processI18nElements = (
 /**
  * Initializes the i18n processing for elements with specific attributes.
  */
-export const init = (): void => {
+export const initLocalization = (): void => {
   onDocumentReady(() => {
     processI18nElements('i18n', (element, key) => {
       element.innerHTML = tl(key)

@@ -5,7 +5,7 @@ import '@material/web/switch/switch'
 import { FontListItem, GoogleFont, Message } from '@types'
 import { googleFontsList } from '@utils/constants'
 import { $ } from '@utils/domUtils'
-import { init, tl } from '@utils/localize'
+import { initLocalization, tl } from '@utils/localize'
 import { CONFIG, LOCAL_CONFIG } from '@utils/storage'
 import { TemplateResult, html, render } from 'lit'
 import './components/icons/reset-icon'
@@ -271,7 +271,8 @@ const initializeSettings = (
 
 // Add event listener to load event
 window.addEventListener('load', async () => {
-  init()
+  initLocalization()
+  initializeSwitchState()
   try {
     const fontSettings = await getConfigSettings()
     const fontList = await updateFontList()
