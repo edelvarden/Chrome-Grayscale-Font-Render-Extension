@@ -51,24 +51,17 @@ const saveSettings = (settings: Partial<Settings>): void => {
 }
 
 const saveSwitchState = async (state: boolean): Promise<void> => {
-  const currentTab = await queryActiveTab()
-  if (currentTab) {
-    const storageKey = `switch_state_${currentTab.url}`
-    CONFIG?.set({ [storageKey]: state })
-  }
+  const storageKey = `switch_state`
+  CONFIG?.set({ [storageKey]: state })
 }
 
 const getSwitchState = async (): Promise<boolean | undefined> => {
-  const currentTab = await queryActiveTab()
-  if (currentTab) {
-    const storageKey = `switch_state_${currentTab.url}`
-    return new Promise((resolve) => {
-      CONFIG?.get([storageKey], (result) => {
-        resolve(result[storageKey])
-      })
+  const storageKey = `switch_state`
+  return new Promise((resolve) => {
+    CONFIG?.get([storageKey], (result) => {
+      resolve(result[storageKey])
     })
-  }
-  return undefined
+  })
 }
 
 // Settings management functions
