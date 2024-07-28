@@ -62,7 +62,7 @@ const getCssRules = memo(async (fontObject: FontObject[], ligatures): Promise<st
   const importFonts: string[] = []
 
   const handleFont = (font: FontObject, isMonospace: boolean = false): void => {
-    const weights = [400, 700]
+    const weights = isMonospace ? [400, 700] : [400, 700]
     if (font.isGoogleFont) {
       importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     }
