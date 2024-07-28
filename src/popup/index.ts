@@ -16,6 +16,7 @@ import './index.css'
 // Define types for variables
 let isOn: boolean = true
 let isAdvancedMode: boolean = false
+let ligatures: boolean = false
 
 // Type definition for settings
 interface Settings {
@@ -23,6 +24,7 @@ interface Settings {
   'font-default2': string
   'font-mono': string
   'font-mono2': string
+  ligatures: boolean
 }
 
 // Utility function to query active tab
@@ -127,13 +129,21 @@ const handleAdvancedModeToggle = async (): Promise<void> => {
   initializeSettings(fontSettings, fontList)
 }
 
+const handleLigaturesToggle = (): void => {
+  ligatures = !ligatures
+  saveSettings({ ligatures })
+}
+
 const getConfigSettings = async (): Promise<Partial<Settings>> => {
   const settings = (await CONFIG?.get({
     'font-default': '',
     'font-default2': '',
     'font-mono': '',
     'font-mono2': '',
+    ligatures: false,
   })) as Partial<Settings>
+
+  ligatures = settings.ligatures ?? false
 
   return settings
 }
@@ -185,6 +195,18 @@ const initializeSettings = (
         .checked=${isAdvancedMode}
       ></md-checkbox>
       Advanced mode
+    </label>
+  `
+
+  const ligaturesCheckbox: TemplateResult = html`
+    <label style="display: flex; flex-direction: row; align-items: center;">
+      <md-checkbox
+        id="ligaturesCheckbox"
+        touch-target="wrapper"
+        @change=${handleLigaturesToggle}
+        .checked=${ligatures}
+      ></md-checkbox>
+      Ligatures
     </label>
   `
 
@@ -248,6 +270,7 @@ const initializeSettings = (
               </div>
             `
           })}
+          <div class="settings__item" style="padding-left:12px;">${ligaturesCheckbox}</div>
           <div class="settings__item" style="padding-left:12px;">${advancedModeCheckbox}</div>
         </section>
       </div>

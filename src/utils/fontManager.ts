@@ -12,6 +12,7 @@ const STYLE_TAG_ID = addHashSuffix('style')
 
 let isSansFont = false
 let isMonospaceFont = false
+let ligatures = false
 
 /**
  * Disables the style tag and removes inline styles
@@ -44,7 +45,7 @@ export const createOrUpdateStyleTag = (id: string, content: string): void => {
     styleTag.disabled = false
   } else {
     styleTag = $$$('style', { innerHTML: content, id }) as HTMLStyleElement
-    document.head.append(styleTag) // append is require to override !important rules
+    document.head.append(styleTag) // append is required to override !important rules
   }
 }
 
@@ -62,7 +63,7 @@ const getCssRules = memo(async (fontObject: FontObject[]): Promise<string> => {
   const importFonts: string[] = []
 
   const handleFont = (font: FontObject, isMonospace: boolean = false): void => {
-    const weights = isMonospace ? [400, 700] : [400, 700]
+    const weights = [400, 700]
     if (font.isGoogleFont) {
       importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     }
@@ -98,6 +99,10 @@ const getCssRules = memo(async (fontObject: FontObject[]): Promise<string> => {
     )
   }
 
+  if (!ligatures) {
+    rootCssVariables.push(`font-variant-ligatures: none;`)
+  }
+
   cssRules.push(`:root{${rootCssVariables.join('')}}`)
 
   if (sansFont.fontFamily) {
@@ -129,9 +134,14 @@ export const preview = async (): Promise<void> => {
     const { off } = (await LOCAL_CONFIG.get({ off: false })) as { off: boolean }
     if (off) return
 
-    const settings = (await CONFIG.get({ 'font-default': '', 'font-mono': '' })) as {
+    const settings = (await CONFIG.get({
+      'font-default': '',
+      'font-mono': '',
+      ligatures: false,
+    })) as {
       'font-default': string
       'font-mono': string
+      ligatures: boolean
     }
 
     init(settings)
@@ -143,8 +153,18 @@ export const preview = async (): Promise<void> => {
 /**
  * Initializes main functions
  */
-export const init = async (settings: { 'font-default': string; 'font-mono': string }) => {
-  const { 'font-default': sansFont, 'font-mono': monospaceFont } = settings
+export const init = async (settings: {
+  'font-default': string
+  'font-mono': string
+  ligatures: boolean
+}) => {
+  const {
+    'font-default': sansFont,
+    'font-mono': monospaceFont,
+    ligatures: ligaturesSetting,
+  } = settings
+
+  ligatures = ligaturesSetting
 
   isSansFont = sansFont?.length > 0
   isMonospaceFont = monospaceFont?.length > 0
