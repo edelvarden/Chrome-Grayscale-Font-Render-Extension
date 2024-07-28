@@ -198,7 +198,7 @@ const initializeSettings = (
         @change=${handleAdvancedModeToggle}
         .checked=${isAdvancedMode}
       ></md-checkbox>
-      Advanced mode
+      ${tl('SETTINGS_ADVANCED_MODE')}
     </label>
   `
 
@@ -210,7 +210,7 @@ const initializeSettings = (
         @change=${handleLigaturesToggle}
         .checked=${ligatures}
       ></md-checkbox>
-      Ligatures
+      ${tl('SETTINGS_LIGATURES')}
     </label>
   `
 

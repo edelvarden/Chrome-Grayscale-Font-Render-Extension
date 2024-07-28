@@ -31,5 +31,11 @@
   },
   "SETTINGS_TITLE_FONTS": {
     "message": "Custom Fonts"
+  },
+  "SETTINGS_LIGATURES": {
+    "message": "Ligatures"
+  },
+  "SETTINGS_ADVANCED_MODE": {
+    "message": "Advanced mode"
   }
 }
