@@ -73,6 +73,8 @@ const handleSaveSettings = (): void => {
     const select = $(`#${id}`) as HTMLSelectElement
     if (select) settings[id as keyof Settings] = select.value.trim() || ''
   })
+  settings.ligatures = ligatures
+
   saveSettings(settings)
 }
 
@@ -129,9 +131,11 @@ const handleAdvancedModeToggle = async (): Promise<void> => {
   initializeSettings(fontSettings, fontList)
 }
 
-const handleLigaturesToggle = (): void => {
-  ligatures = !ligatures
+const handleLigaturesToggle = (event: Event): void => {
+  const checkbox = event.target as HTMLInputElement
+  ligatures = checkbox.checked
   saveSettings({ ligatures })
+  handleSaveSettings()
 }
 
 const getConfigSettings = async (): Promise<Partial<Settings>> => {

@@ -12,7 +12,6 @@ const STYLE_TAG_ID = addHashSuffix('style')
 
 let isSansFont = false
 let isMonospaceFont = false
-let ligatures = false
 
 /**
  * Disables the style tag and removes inline styles
@@ -57,7 +56,7 @@ interface FontObject {
 /**
  * Collects and merges styles into one string and returns it
  */
-const getCssRules = memo(async (fontObject: FontObject[]): Promise<string> => {
+const getCssRules = memo(async (fontObject: FontObject[], ligatures): Promise<string> => {
   const [sansFont, monospaceFont] = fontObject
   const cssRules: string[] = []
   const importFonts: string[] = []
@@ -164,7 +163,7 @@ export const init = async (settings: {
     ligatures: ligaturesSetting,
   } = settings
 
-  ligatures = ligaturesSetting
+  let ligatures = ligaturesSetting
 
   isSansFont = sansFont?.length > 0
   isMonospaceFont = monospaceFont?.length > 0
@@ -176,7 +175,7 @@ export const init = async (settings: {
     { fontFamily: removePrefix(monospaceFont), isGoogleFont: isGoogleFont(monospaceFont) },
   ]
 
-  const cssRules = await getCssRules(fontObject)
+  const cssRules = await getCssRules(fontObject, ligatures)
 
   createOrUpdateStyleTag(STYLE_TAG_ID, cssRules)
 
