@@ -105,8 +105,6 @@ const getCssRules = memo(async (fontObject: FontObject[], ligatures): Promise<st
   cssRules.push(`:root{${rootCssVariables.join('')}}`)
 
   if (sansFont.fontFamily) {
-    cssRules.push(`h1,h2,h3,h4,h5,h6,p{font-family:var(--${SANS_CLASS})!important}`)
-
     cssRules.push([...generalStyles.sansStyles].join(''))
   }
 
