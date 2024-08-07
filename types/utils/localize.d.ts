@@ -9,5 +9,5 @@ export declare const tl: (message: string, args?: GetMessageArgs) => string;
 /**
  * Initializes the i18n processing for elements with specific attributes.
  */
-export declare const init: () => void;
+export declare const initLocalization: () => void;
 export {};

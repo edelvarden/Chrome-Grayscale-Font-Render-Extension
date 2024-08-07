@@ -33,6 +33,6 @@
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/manifest.ts", "src/**/*.test.ts"],
+  "exclude": ["src/manifest.ts", "src/**/*.test.ts", "src/__benchmarks__/**/*.*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

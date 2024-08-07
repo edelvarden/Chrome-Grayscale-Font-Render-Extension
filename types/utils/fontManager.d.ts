@@ -20,4 +20,5 @@ export declare const preview: () => Promise<void>;
 export declare const init: (settings: {
     "font-default": string;
     "font-mono": string;
+    ligatures: boolean;
 }) => Promise<void>;
