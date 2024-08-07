@@ -82,6 +82,9 @@ const resetSettings = (): void => {
   CONFIG?.clear(() => {
     removeEffect()
     resetSelectValues()
+    ligatures = false // Reset ligatures value
+    const ligaturesCheckbox = $('#ligaturesCheckbox') as HTMLInputElement
+    if (ligaturesCheckbox) ligaturesCheckbox.checked = ligatures // Update checkbox state
     if (!isOn) handleSwitchToggle()
     initializeSwitchState()
   })
