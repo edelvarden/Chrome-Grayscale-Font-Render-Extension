@@ -25,7 +25,6 @@ import { cleanupStyles, preview } from '../utils/fontManager'
         cleanupStyles()
         break
       default:
-        console.error('❌ Unknown action:', message.action)
         break
     }
   })

@@ -99,7 +99,7 @@ const getCssRules = memo(async (fontObject: FontObject[], ligatures): Promise<st
   }
 
   if (!ligatures) {
-    rootCssVariables.push(`font-variant-ligatures: none;`)
+    cssRules.push(`code,kbd,pre,samp{font-variant-ligatures:none!important}`)
   }
 
   cssRules.push(`:root{${rootCssVariables.join('')}}`)
