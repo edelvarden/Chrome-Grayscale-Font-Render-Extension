@@ -86,6 +86,7 @@ const parseStyles = (
   cssText: string,
   sansFontFamily: string,
   monospaceFontFamily: string,
+  ligatures: boolean
 ): Styles => {
   const styles: Styles = {
     sansStyles: new Set<string>(),
@@ -93,16 +94,16 @@ const parseStyles = (
   }
 
   if (!cssSelector.trimStart().startsWith('@') && !cssSelector.trimStart().startsWith('/*')) {
-    if (serifRegex.test(cssText)) {
+    if (serifRegex.test(cssText) && !cssText.includes("--sans")) {
       if (cssText.includes('font-family:')) {
         styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
       }
       const variables = parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)
       addVariableStyles(cssSelector, variables, styles.sansStyles, sansFontFamily)
     }
-    if (monospaceRegex.test(cssText)) {
+    if (monospaceRegex.test(cssText) && !cssText.includes('--monospace')) {
       if (cssText.includes('font-family:')) {
-        styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;}`)
+        styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;${!ligatures ? 'font-variant-ligatures:none!important;' : ''}}`)
       }
       const variables = parseVariables(
         cssSelector,
@@ -125,6 +126,7 @@ const loadCrossOriginStyles = async (
   url: string | null,
   sansFontFamily: string,
   monospaceFontFamily: string,
+  ligatures: boolean
 ): Promise<Styles> => {
   const styles: Styles = {
     sansStyles: new Set<string>(),
@@ -136,7 +138,7 @@ const loadCrossOriginStyles = async (
       const cssText = await fetchStylesheet(url)
       cssText.split('}').forEach((style) => {
         const cssSelector = style.split('{')[0].trim()
-        const parsedStyles = parseStyles(cssSelector, style, sansFontFamily, monospaceFontFamily)
+        const parsedStyles = parseStyles(cssSelector, style, sansFontFamily, monospaceFontFamily, ligatures)
         parsedStyles.sansStyles.forEach((style) => styles.sansStyles.add(style))
         parsedStyles.monospaceStyles.forEach((style) => styles.monospaceStyles.add(style))
       })
@@ -152,7 +154,7 @@ const loadCrossOriginStyles = async (
  * Parses all webpage styles to get selectors for sans and monospace fonts
  */
 export const getStyles = memo(
-  async (sansFontFamily: string, monospaceFontFamily: string): Promise<Styles> => {
+  async (sansFontFamily: string, monospaceFontFamily: string, ligatures = false): Promise<Styles> => {
     const styles: Styles = {
       sansStyles: new Set<string>(),
       monospaceStyles: new Set<string>(),
@@ -178,6 +180,7 @@ export const getStyles = memo(
                 cssText,
                 sansFontFamily,
                 monospaceFontFamily,
+                ligatures
               )
               parsedStyles.sansStyles.forEach((style) => styles.sansStyles.add(style))
               parsedStyles.monospaceStyles.forEach((style) => styles.monospaceStyles.add(style))
@@ -189,6 +192,7 @@ export const getStyles = memo(
           styleUrl,
           sansFontFamily,
           monospaceFontFamily,
+          ligatures
         )
         crossOriginStyles.sansStyles.forEach((style) => styles.sansStyles.add(style))
         crossOriginStyles.monospaceStyles.forEach((style) => styles.monospaceStyles.add(style))

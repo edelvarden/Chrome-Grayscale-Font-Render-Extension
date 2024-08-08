@@ -79,7 +79,7 @@ const getCssRules = memo(async (fontObject: FontObject[], ligatures): Promise<st
     )
   }
 
-  const generalStyles = await getStyles(`var(--${SANS_CLASS})`, `var(--${MONOSPACE_CLASS})`)
+  const generalStyles = await getStyles(`var(--${SANS_CLASS})`, `var(--${MONOSPACE_CLASS})`, ligatures)
   const rootCssVariables: string[] = []
 
   rootCssVariables.push(
@@ -96,10 +96,6 @@ const getCssRules = memo(async (fontObject: FontObject[], ligatures): Promise<st
     rootCssVariables.push(
       `--${MONOSPACE_CLASS}:${fixName(monospaceFont.fontFamily)},monospace,var(--${FALLBACK_CLASS});`,
     )
-  }
-
-  if (!ligatures) {
-    cssRules.push(`code,kbd,pre,samp{font-variant-ligatures:none!important}`)
   }
 
   cssRules.push(`:root{${rootCssVariables.join('')}}`)
