@@ -6,10 +6,7 @@ on:
     branches: [main]
     paths:
       - "package.json" # Trigger workflow on changes in package.json
-
-env:
-  node_version: 20
-
+      
 jobs:
   build:
     permissions:
@@ -21,15 +18,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.node_version }}
+          node-version: 'lts/*'
+          cache: 'pnpm'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Get pnpm store directory
@@ -38,7 +36,7 @@ jobs:
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Cache pnpm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -53,6 +51,7 @@ jobs:
 
       - name: Build the extension
         run: pnpm build
+        continue-on-error: false
 
       - name: Install web-ext globally
         run: |
