@@ -10,27 +10,13 @@ const SANS_CLASS = addHashSuffix('sans')
 const MONOSPACE_CLASS = addHashSuffix('monospace')
 const STYLE_TAG_ID = addHashSuffix('style')
 
+// Font states
 let isSansFont = false
 let isMonospaceFont = false
 
-/**
- * Disables the style tag and removes inline styles
- */
-export const cleanupStyles = (): void => {
-  toggleStyleTag(STYLE_TAG_ID, false)
-  removeInlineStyle(document.documentElement)
-  removeInlineStyle(document.body)
-}
-
-/**
- * Toggles the enabled state of the style tag
- */
-export const toggleStyleTag = (styleId: string, enable: boolean): void => {
-  const styleTag = $(`#${styleId}`) as HTMLStyleElement | null
-  if (styleTag) {
-    styleTag.disabled = !enable
-  }
-}
+// Helper functions
+const isGoogleFont = (fontId: string): boolean => fontId.startsWith('GF-')
+const removePrefix = (fontId: string): string => fontId.replace('GF-', '')
 
 /**
  * Creates or updates the style tag's content when different
@@ -48,6 +34,13 @@ export const createOrUpdateStyleTag = (id: string, content: string): void => {
   }
 }
 
+/**
+ * Sets inline styles for an element
+ */
+const toggleInlineStyle = (element: HTMLElement, enable: boolean): void => {
+  element.style.setProperty('font-family', enable ? `var(--${SANS_CLASS})` : '', 'important')
+}
+
 interface FontObject {
   fontFamily: string
   isGoogleFont: boolean
@@ -56,67 +49,61 @@ interface FontObject {
 /**
  * Collects and merges styles into one string and returns it
  */
-const getCssRules = memo(async (fontObject: FontObject[], ligatures): Promise<string> => {
-  const [sansFont, monospaceFont] = fontObject
-  const cssRules: string[] = []
+const getCssRules = memo(async (fontObjects: FontObject[], ligatures: boolean): Promise<string> => {
+  const [sansFont, monospaceFont] = fontObjects
   const importFonts: string[] = []
 
-  const handleFont = (font: FontObject, isMonospace: boolean = false): void => {
-    const weights = isMonospace ? [400, 700] : [400, 700]
+  const addFont = (font: FontObject, isMonospace = false): void => {
     if (font.isGoogleFont) {
+      const weights = isMonospace ? [400, 700] : [400, 700]
       importFonts.push(`family=${font.fontFamily.split(' ').join('+')}:wght@${weights.join(';')}`)
     }
   }
 
-  handleFont(sansFont)
+  addFont(sansFont)
   if (sansFont.fontFamily !== monospaceFont.fontFamily) {
-    handleFont(monospaceFont, true)
+    addFont(monospaceFont, true)
   }
 
-  if (importFonts.length > 0) {
-    cssRules.unshift(
-      `@import url('https://fonts.googleapis.com/css2?${importFonts.join('&')}&display=swap');`,
-    )
-  }
-
-  const generalStyles = await getStyles(`var(--${SANS_CLASS})`, `var(--${MONOSPACE_CLASS})`, ligatures)
-  const rootCssVariables: string[] = []
-
-  rootCssVariables.push(
-    `--${FALLBACK_CLASS}:"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";`,
+  const importRules = importFonts.length
+    ? `@import url('https://fonts.googleapis.com/css2?${importFonts.join('&')}&display=swap');`
+    : ''
+  const generalStyles = await getStyles(
+    `var(--${SANS_CLASS})`,
+    `var(--${MONOSPACE_CLASS})`,
+    ligatures,
   )
+  const rootCssVariables = [
+    `--${FALLBACK_CLASS}:"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";`,
+    sansFont.fontFamily
+      ? `--${SANS_CLASS}:${fixName(sansFont.fontFamily)},sans-serif,var(--${FALLBACK_CLASS});`
+      : '',
+    monospaceFont.fontFamily
+      ? `--${MONOSPACE_CLASS}:${fixName(monospaceFont.fontFamily)},monospace,var(--${FALLBACK_CLASS});`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('')
 
-  if (sansFont.fontFamily) {
-    rootCssVariables.push(
-      `--${SANS_CLASS}:${fixName(sansFont.fontFamily)},sans-serif,var(--${FALLBACK_CLASS});`,
-    )
-  }
-
-  if (monospaceFont.fontFamily) {
-    rootCssVariables.push(
-      `--${MONOSPACE_CLASS}:${fixName(monospaceFont.fontFamily)},monospace,var(--${FALLBACK_CLASS});`,
-    )
-  }
-
-  cssRules.push(`:root{${rootCssVariables.join('')}}`)
-
-  if (sansFont.fontFamily) {
-    cssRules.push([...generalStyles.sansStyles].join(''))
-  }
-
-  if (monospaceFont.fontFamily) {
-    cssRules.push([...generalStyles.monospaceStyles].join(''))
-  }
-
-  return cssRules.join('')
+  return `${importRules} :root{${rootCssVariables}} ${sansFont.fontFamily ? generalStyles.sansStyles : ''} ${monospaceFont.fontFamily ? generalStyles.monospaceStyles : ''}`
 })
 
-const addInlineStyle = (element: HTMLElement): void => {
-  element.style.setProperty('font-family', `var(--${SANS_CLASS})`, 'important')
+/**
+ * Disables the style tag and removes inline styles
+ */
+export const cleanupStyles = (): void => {
+  toggleStyleTag(STYLE_TAG_ID, false)
+  ;[document.documentElement, document.body].forEach((element) => toggleInlineStyle(element, false))
 }
 
-const removeInlineStyle = (element: HTMLElement): void => {
-  element.style.removeProperty('font-family')
+/**
+ * Toggles the enabled state of the style tag
+ */
+export const toggleStyleTag = (styleId: string, enable: boolean): void => {
+  const styleTag = $(`#${styleId}`) as HTMLStyleElement | null
+  if (styleTag) {
+    styleTag.disabled = !enable
+  }
 }
 
 /**
@@ -157,31 +144,19 @@ export const init = async (settings: {
     ligatures: ligaturesSetting,
   } = settings
 
-  let ligatures = ligaturesSetting
-
-  isSansFont = sansFont?.length > 0
-  isMonospaceFont = monospaceFont?.length > 0
+  isSansFont = Boolean(sansFont)
+  isMonospaceFont = Boolean(monospaceFont)
 
   if (!isSansFont && !isMonospaceFont) return cleanupStyles()
 
-  const fontObject: FontObject[] = [
+  const fontObjects: FontObject[] = [
     { fontFamily: removePrefix(sansFont), isGoogleFont: isGoogleFont(sansFont) },
     { fontFamily: removePrefix(monospaceFont), isGoogleFont: isGoogleFont(monospaceFont) },
   ]
 
-  const cssRules = await getCssRules(fontObject, ligatures)
-
+  const cssRules = await getCssRules(fontObjects, ligaturesSetting)
   createOrUpdateStyleTag(STYLE_TAG_ID, cssRules)
-
-  if (isSansFont) {
-    addInlineStyle(document.documentElement)
-    addInlineStyle(document.body)
-  } else {
-    removeInlineStyle(document.documentElement)
-    removeInlineStyle(document.body)
-  }
+  ;[document.documentElement, document.body].forEach((element) =>
+    toggleInlineStyle(element, isSansFont),
+  )
 }
-
-// Helper function to check if a font is a Google font
-const isGoogleFont = (fontId: string): boolean => fontId.startsWith('GF-')
-const removePrefix = (fontId: string): string => fontId.replace('GF-', '')

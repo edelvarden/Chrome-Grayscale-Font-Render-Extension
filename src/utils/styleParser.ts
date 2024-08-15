@@ -20,7 +20,35 @@ const fetchStylesheet = async (url: string): Promise<string> => {
 }
 
 /**
- * Special case for variables like `--font-body: Inter, var(--font-fallback)`
+ * Parses CSS variables and adds them to a style set
+ */
+const parseVariables = (
+  cssSelector: string,
+  cssText: string,
+  styleObject: Set<string>,
+  fontFamily: string,
+  isMonospace: boolean = false,
+): Record<string, string> => {
+  const variableMap: Record<string, string> = {}
+  const variableRegex = /--[\w-]+:\s*[^;]+;?/g
+
+  const variables = cssText.match(variableRegex) || []
+  variables.forEach((variable) => {
+    const [property, value] = variable.split(':').map((part) => part.trim())
+    if (property && value) {
+      variableMap[property] = value
+
+      if (property.startsWith('--') && (isMonospace ? monospaceRegex : serifRegex).test(value)) {
+        styleObject.add(`${cssSelector}{${property}:${fontFamily}!important;}`)
+      }
+    }
+  })
+
+  return variableMap
+}
+
+/**
+ * Adds variable styles based on CSS variables
  */
 const addVariableStyles = (
   cssSelector: string,
@@ -48,37 +76,6 @@ const addVariableStyles = (
 }
 
 /**
- * Parses CSS variables in a CSS rule and adds them to a style set
- */
-const parseVariables = (
-  cssSelector: string,
-  cssText: string,
-  styleObject: Set<string>,
-  fontFamily: string,
-  isMonospace: boolean = false,
-): Record<string, string> => {
-  const declarations = cssText.split('{')[1].split(';')
-  const variableMap: Record<string, string> = {}
-
-  declarations.forEach((declaration) => {
-    const [property, value] = declaration.trim().split(':')
-    if (property && value) {
-      const resolvedValue = value.trim()
-      variableMap[property] = resolvedValue
-
-      if (
-        property.startsWith('--') &&
-        (isMonospace ? monospaceRegex : serifRegex).test(resolvedValue)
-      ) {
-        styleObject.add(`${cssSelector}{${property}:${fontFamily}!important;}`)
-      }
-    }
-  })
-
-  return variableMap
-}
-
-/**
  * Parses CSS text to extract sans and monospace styles
  */
 const parseStyles = (
@@ -86,7 +83,7 @@ const parseStyles = (
   cssText: string,
   sansFontFamily: string,
   monospaceFontFamily: string,
-  ligatures: boolean
+  ligatures: boolean,
 ): Styles => {
   const styles: Styles = {
     sansStyles: new Set<string>(),
@@ -94,16 +91,22 @@ const parseStyles = (
   }
 
   if (!cssSelector.trimStart().startsWith('@') && !cssSelector.trimStart().startsWith('/*')) {
-    if (serifRegex.test(cssText) && !cssText.includes("--sans")) {
+    const isSans = serifRegex.test(cssText) && !cssText.includes('--sans')
+    const isMonospace = monospaceRegex.test(cssText) && !cssText.includes('--monospace')
+
+    if (isSans) {
       if (cssText.includes('font-family:')) {
         styles.sansStyles.add(`${cssSelector}{font-family:${sansFontFamily}!important;}`)
       }
       const variables = parseVariables(cssSelector, cssText, styles.sansStyles, sansFontFamily)
       addVariableStyles(cssSelector, variables, styles.sansStyles, sansFontFamily)
     }
-    if (monospaceRegex.test(cssText) && !cssText.includes('--monospace')) {
+
+    if (isMonospace) {
       if (cssText.includes('font-family:')) {
-        styles.monospaceStyles.add(`${cssSelector}{font-family:${monospaceFontFamily}!important;${!ligatures ? 'font-variant-ligatures:none!important;' : ''}}`)
+        styles.monospaceStyles.add(
+          `${cssSelector}{font-family:${monospaceFontFamily}!important;${!ligatures ? 'font-variant-ligatures:none!important;' : ''}}`,
+        )
       }
       const variables = parseVariables(
         cssSelector,
@@ -126,7 +129,7 @@ const loadCrossOriginStyles = async (
   url: string | null,
   sansFontFamily: string,
   monospaceFontFamily: string,
-  ligatures: boolean
+  ligatures: boolean,
 ): Promise<Styles> => {
   const styles: Styles = {
     sansStyles: new Set<string>(),
@@ -138,7 +141,13 @@ const loadCrossOriginStyles = async (
       const cssText = await fetchStylesheet(url)
       cssText.split('}').forEach((style) => {
         const cssSelector = style.split('{')[0].trim()
-        const parsedStyles = parseStyles(cssSelector, style, sansFontFamily, monospaceFontFamily, ligatures)
+        const parsedStyles = parseStyles(
+          cssSelector,
+          style,
+          sansFontFamily,
+          monospaceFontFamily,
+          ligatures,
+        )
         parsedStyles.sansStyles.forEach((style) => styles.sansStyles.add(style))
         parsedStyles.monospaceStyles.forEach((style) => styles.monospaceStyles.add(style))
       })
@@ -154,7 +163,11 @@ const loadCrossOriginStyles = async (
  * Parses all webpage styles to get selectors for sans and monospace fonts
  */
 export const getStyles = memo(
-  async (sansFontFamily: string, monospaceFontFamily: string, ligatures = false): Promise<Styles> => {
+  async (
+    sansFontFamily: string,
+    monospaceFontFamily: string,
+    ligatures = false,
+  ): Promise<Styles> => {
     const styles: Styles = {
       sansStyles: new Set<string>(),
       monospaceStyles: new Set<string>(),
@@ -180,7 +193,7 @@ export const getStyles = memo(
                 cssText,
                 sansFontFamily,
                 monospaceFontFamily,
-                ligatures
+                ligatures,
               )
               parsedStyles.sansStyles.forEach((style) => styles.sansStyles.add(style))
               parsedStyles.monospaceStyles.forEach((style) => styles.monospaceStyles.add(style))
@@ -192,7 +205,7 @@ export const getStyles = memo(
           styleUrl,
           sansFontFamily,
           monospaceFontFamily,
-          ligatures
+          ligatures,
         )
         crossOriginStyles.sansStyles.forEach((style) => styles.sansStyles.add(style))
         crossOriginStyles.monospaceStyles.forEach((style) => styles.monospaceStyles.add(style))

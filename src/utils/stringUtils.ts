@@ -1,23 +1,25 @@
 /**
  * Normalizes a font name by ensuring it conforms to certain CSS naming rules.
- * @param {string} fontFamily - The font name to normalize (eg., Open Sans, 'Open Sans', "Open Sans").
- * @returns {string} The normalized font name (eg., "Open Sans").
+ * @param {string} fontFamily - The font name to normalize (e.g., Open Sans, 'Open Sans', "Open Sans").
+ * @returns {string} The normalized font name. If the name is a standard CSS font-family keyword, it is returned as-is.
  */
 export const fixName = (fontFamily: string): string => {
   if (!fontFamily) return ''
 
-  // Remove single or double quotes
+  // Remove single or double quotes around the font name
   const cleanedName = fontFamily.trim().replace(/^['"]|['"]$/g, '')
 
+  // Return empty string if the cleaned name is still empty
   if (!cleanedName) {
     return ''
   }
 
-  // If the name is monospace, sans-serif etc., return as is
+  // Return the cleaned name as-is if it's a standard CSS font-family keyword
   if (/^(?:serif|sans-serif|cursive|fantasy|monospace)$/i.test(cleanedName)) {
     return cleanedName
   }
 
+  // Return the cleaned name enclosed in quotes
   return `"${cleanedName}"`
 }
 
